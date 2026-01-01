@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 
 // Connect to Backend
-const socket = io('http://localhost:5000');
+const socket = io('https://xts-backend-api.onrender.com');
 
 export default function MarketWatch({ onSelectRow, onDataUpdate }) {
   const [selectedId, setSelectedId] = useState(null);

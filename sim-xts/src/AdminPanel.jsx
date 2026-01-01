@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, RefreshCw } from 'lucide-react';
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://xts-backend-api.onrender.com/api";
 
 const AdminPanel = ({ onClose }) => {
   const [users, setUsers] = useState([]);

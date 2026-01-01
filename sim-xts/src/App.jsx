@@ -10,7 +10,7 @@ import Funds from './Funds';
 import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; // Import Admin Panel
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://xts-backend-api.onrender.com/api";
 
 // --- LOGIN COMPONENT ---
 const ScreenUserId = ({ onNext, setGlobalId }) => {
