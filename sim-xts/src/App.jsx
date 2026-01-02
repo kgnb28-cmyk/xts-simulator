@@ -9,7 +9,7 @@ import DraggableWindow from './DraggableWindow';
 import Funds from './Funds';
 import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; 
-import AuthScreen from './AuthScreen'; // [NEW] Quiet Luxury UI
+import AuthScreen from './AuthScreen'; // Will be updated in Step 2
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
