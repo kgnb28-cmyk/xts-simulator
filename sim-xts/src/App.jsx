@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff, X, Wifi, WifiOff } from 'lucide-react'; 
+import { X, Wifi, WifiOff } from 'lucide-react'; 
 import MarketWatch from './MarketWatch';
 import OrderWindow from './OrderWindow';
 import OrderBook from './OrderBook';
@@ -9,7 +9,7 @@ import DraggableWindow from './DraggableWindow';
 import Funds from './Funds';
 import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; 
-import AuthScreen from './AuthScreen'; // [NEW] Phase 16 Security
+import AuthScreen from './AuthScreen'; // [NEW] Quiet Luxury UI
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
@@ -55,7 +55,7 @@ export default function App() {
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("X14AD43"); 
-  const [showAdmin, setShowAdmin] = useState(false); // Admin State
+  const [showAdmin, setShowAdmin] = useState(false); 
 
   // WINDOW STATES
   const [selectedScript, setSelectedScript] = useState(null); 
@@ -89,7 +89,6 @@ export default function App() {
       setIsLoadingData(true); 
       setIsOffline(false);
       
-      // Updated to fetch by username
       fetch(`${API_URL}/user/${currentUserId}`)
         .then(res => res.json())
         .then(data => {
@@ -268,16 +267,11 @@ export default function App() {
       // [SECURE] ADMIN TOGGLE: Ctrl + Shift + A
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
           e.preventDefault();
-          
-          // SECURITY CHECK: Only allow YOUR User ID (or an 'ADMIN' id)
-          // Replace 'X14AD43' with strictly the ID you want to have power.
           const ALLOWED_ADMINS = ["X14AD43", "ADMIN"]; 
-          
           if (!ALLOWED_ADMINS.includes(currentUserId)) {
               alert("⛔ SECURITY ALERT: Unauthorized Access Attempt Logged.");
-              return; // Stop right here. Do not show the panel.
+              return; 
           }
-
           setShowAdmin(prev => !prev); 
       }
 
@@ -310,7 +304,7 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleGlobalKeys);
   }, [isLoggedIn, selectedScript, orderWindow, liveSelectedData, selectedOrderId, orders, currentUserId]);
 
-  // --- RENDER ---
+  // --- RENDER (LOGGED IN - TERMINAL) ---
   if (isLoggedIn) {
     if (isLoadingData) {
         return (
@@ -321,13 +315,13 @@ export default function App() {
         );
     }
 
-    // [NEW] ADMIN PANEL OVERLAY
     if (showAdmin) {
         return <AdminPanel onClose={() => setShowAdmin(false)} />;
     }
 
     return (
         <div className="w-screen h-screen bg-[#f0f2f5] flex flex-col overflow-hidden font-sans select-none">
+             {/* TOP MENU - ONLY VISIBLE WHEN LOGGED IN */}
              <div className="bg-[#fcfdfe] border-b border-gray-300 px-2 py-0.5 flex gap-3 text-[11px] text-gray-600 shadow-sm z-10">{['File','Market','Orders And Trades','Preferences','Surveillance','Masters','Tools','Scanner','Funds','Add-In','Help'].map(m => (<span key={m} className="hover:bg-gray-200 px-1 cursor-pointer">{m}</span>))}</div>
 
             <div className="flex-1 relative flex flex-col">
@@ -388,43 +382,28 @@ export default function App() {
     );
   }
 
-  // --- RENDER LOGIN SCREEN ---
+  // --- RENDER (LOGGED OUT - LANDING PAGE) ---
   return (
-    <div className="w-screen h-screen bg-[#f0f2f5] flex flex-col overflow-hidden font-sans select-none">
-        {/* Top Menu Bar */}
-        <div className="bg-[#fcfdfe] border-b border-gray-300 px-2 py-0.5 flex gap-3 text-[11px] text-gray-600 shadow-sm z-10">
-            {['File','Market','Orders And Trades','Preferences','Surveillance','Masters','Tools','Scanner','Funds','Add-In','Help'].map(m => (<span key={m} className="hover:bg-gray-200 px-1 cursor-pointer">{m}</span>))}
-        </div>
+    <div className="w-screen h-screen bg-white flex flex-col overflow-hidden font-sans select-none">
+        {/* [REMOVED TOP MENU] - Full Screen Experience */}
         
-        {/* Main Login Area */}
-        <div className="flex-1 relative flex items-center justify-center bg-[#f0f2f5]">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 pointer-events-none bg-white"></div>
+        <div className="flex-1 relative flex items-center justify-center">
+            {step === 1 && (
+                <AuthScreen onLoginSuccess={(user, token) => {
+                    setCurrentUserId(user.username);
+                    setStep(2); 
+                }} />
+            )}
+
+            {step === 2 && (
+                <div className="z-50">
+                   <div className="bg-white w-[400px] h-[250px] shadow-2xl rounded-sm border border-gray-300 relative">
+                      <ScreenDownload onNext={() => setIsLoggedIn(true)} />
+                   </div>
+                </div>
+            )}
             
-            {/* [FIXED] DIRECTLY RENDER AUTH SCREEN (Clean Container) */}
-            <div className="z-20">
-                {step === 1 && (
-                    <AuthScreen onLoginSuccess={(user, token) => {
-                        setCurrentUserId(user.username);
-                        setStep(2); 
-                    }} />
-                )}
-
-                {/* Step 2: Download Progress Popup */}
-                {step === 2 && (
-                    <div className="bg-white w-[400px] h-[250px] shadow-2xl rounded-sm border border-gray-300 relative z-20">
-                        <ScreenDownload onNext={() => setIsLoggedIn(true)} />
-                    </div>
-                )}
-            </div>
-
             {showRisk && <RiskModal onAgree={() => setIsLoggedIn(true)} />}
-        </div>
-        
-        {/* Bottom Status Bar */}
-        <div className="bg-[#fcfdfe] border-t border-gray-300 px-2 py-0.5 flex justify-end gap-4 text-[10px] text-gray-600 shadow-sm h-6 items-center">
-            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div><span className="font-bold">NSECM</span></div>
-            <div className="flex items-center gap-1"><div className="flex gap-0.5"><div className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-orange-400 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div></div><span className="font-bold">Feed</span></div>
         </div>
     </div>
   );
