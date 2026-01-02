@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, User, Lock, Mail, ArrowRight, Loader } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, TrendingUp, ShieldCheck, Globe } from 'lucide-react';
 
 const AuthScreen = ({ onLoginSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,11 +9,13 @@ const AuthScreen = ({ onLoginSuccess }) => {
   // Form State
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
 
-  const API_URL = "https://xts-backend-api.onrender.com/api"; // Keep your live URL
+  // KEEP YOUR LIVE URL
+  const API_URL = "https://xts-backend-api.onrender.com/api"; 
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent default form refresh
     setLoading(true);
     setError('');
 
@@ -28,15 +30,14 @@ const AuthScreen = ({ onLoginSuccess }) => {
 
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || 'Something went wrong');
+        if (!res.ok) throw new Error(data.error || 'Connection Refused');
 
         if (isLogin) {
-            // Success: Pass the user data up to App.jsx
             onLoginSuccess(data.user, data.token);
         } else {
-            // Register Success: Switch to login view
-            alert("Registration Successful! Please Login.");
+            alert("Account Created Successfully. Please Sign In.");
             setIsLogin(true);
+            setFormData({ ...formData, password: '' }); // Clear password for safety
         }
     } catch (err) {
         setError(err.message);
@@ -46,54 +47,131 @@ const AuthScreen = ({ onLoginSuccess }) => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center relative font-sans">
-      <div className="absolute top-2 right-2 text-gray-400 cursor-pointer"><X size={16} /></div>
+    <div className="w-full h-full flex items-center justify-center bg-gray-50 font-sans">
       
-      {/* BRANDING HEADER */}
-      <div className="mb-6 text-center">
-        <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600 tracking-tighter">XTS</h1>
-        <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Professional Trading Simulator</p>
-      </div>
+      {/* MAIN CARD CONTAINER */}
+      <div className="flex w-[800px] h-[500px] bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-100">
+        
+        {/* LEFT SIDE: BRAND IDENTITY (Institutional Vibe) */}
+        <div className="w-1/2 bg-slate-900 relative flex flex-col justify-between p-10 text-white overflow-hidden">
+            {/* Background Pattern */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 opacity-5 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600 opacity-10 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
 
-      {/* CARD */}
-      <div className="w-[320px] bg-white p-6 rounded-lg shadow-xl border border-gray-100">
-        <div className="flex justify-between mb-6 border-b border-gray-100 pb-2">
-            <button onClick={() => setIsLogin(true)} className={`text-xs font-bold pb-1 ${isLogin ? 'text-orange-600 border-b-2 border-orange-600' : 'text-gray-400'}`}>LOGIN</button>
-            <button onClick={() => setIsLogin(false)} className={`text-xs font-bold pb-1 ${!isLogin ? 'text-orange-600 border-b-2 border-orange-600' : 'text-gray-400'}`}>REGISTER</button>
+            {/* Logo Area */}
+            <div className="z-10">
+                <div className="flex items-center gap-2 mb-2">
+                    <div className="w-8 h-8 bg-emerald-500 rounded flex items-center justify-center shadow-lg shadow-emerald-900/50">
+                        <TrendingUp size={20} className="text-white" />
+                    </div>
+                    <h1 className="text-2xl font-bold tracking-tight text-white">PaperProp</h1>
+                </div>
+                <p className="text-slate-400 text-xs tracking-wider uppercase font-semibold pl-10">Institutional Simulator</p>
+            </div>
+
+            {/* Feature Highlights */}
+            <div className="z-10 space-y-6">
+                <div className="flex items-start gap-4 opacity-90">
+                    <div className="p-2 bg-slate-800 rounded-lg"><Globe size={18} className="text-emerald-400"/></div>
+                    <div>
+                        <h3 className="font-bold text-sm text-slate-100">Global Markets</h3>
+                        <p className="text-[11px] text-slate-400 leading-relaxed mt-1">Real-time execution simulation across NSE, BSE, and Global Indices.</p>
+                    </div>
+                </div>
+                <div className="flex items-start gap-4 opacity-90">
+                    <div className="p-2 bg-slate-800 rounded-lg"><ShieldCheck size={18} className="text-blue-400"/></div>
+                    <div>
+                        <h3 className="font-bold text-sm text-slate-100">Risk Free Environment</h3>
+                        <p className="text-[11px] text-slate-400 leading-relaxed mt-1">Test strategies with ₹50L virtual capital before deploying real funds.</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer Copyright */}
+            <div className="z-10 text-[10px] text-slate-600">
+                © 2026 PaperProp Financial Technologies.
+            </div>
         </div>
 
-        {error && <div className="mb-4 p-2 bg-red-50 text-red-600 text-[10px] font-bold rounded border border-red-100">{error}</div>}
+        {/* RIGHT SIDE: CLEAN LOGIN FORM (Minimalist) */}
+        <div className="w-1/2 bg-white p-12 flex flex-col justify-center relative">
+            <div className="mb-8">
+                <h2 className="text-2xl font-bold text-slate-800 mb-1">{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
+                <p className="text-xs text-slate-500">
+                    {isLogin ? 'Enter your credentials to access the terminal.' : 'Start your journey as a proprietary trader.'}
+                </p>
+            </div>
 
-        <div className="space-y-3">
-            {!isLogin && (
-                <div className="relative">
-                    <User size={14} className="absolute top-2.5 left-3 text-gray-400" />
-                    <input name="username" placeholder="Create User ID (e.g. TRADER01)" onChange={handleChange} className="w-full pl-9 pr-3 py-2 text-xs font-bold border border-gray-200 rounded focus:border-orange-500 outline-none uppercase" />
+            {error && (
+                <div className="mb-4 px-3 py-2 bg-red-50 border-l-2 border-red-500 text-red-600 text-[11px] font-semibold flex items-center gap-2">
+                    <span>⚠️</span> {error}
                 </div>
             )}
-            
-            <div className="relative">
-                <Mail size={14} className="absolute top-2.5 left-3 text-gray-400" />
-                <input name="email" type="email" placeholder="Email Address" onChange={handleChange} className="w-full pl-9 pr-3 py-2 text-xs font-bold border border-gray-200 rounded focus:border-orange-500 outline-none" />
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {!isLogin && (
+                    <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Trader ID</label>
+                        <input 
+                            name="username" 
+                            type="text" 
+                            placeholder="e.g. TRADER01" 
+                            className="w-full px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded focus:border-slate-900 focus:bg-white focus:outline-none transition-all uppercase placeholder-slate-400"
+                            onChange={handleChange}
+                            required 
+                        />
+                    </div>
+                )}
+
+                <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 tracking-wide">Email Address</label>
+                    <input 
+                        name="email" 
+                        type="email" 
+                        placeholder="name@firm.com" 
+                        className="w-full px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded focus:border-slate-900 focus:bg-white focus:outline-none transition-all placeholder-slate-400"
+                        onChange={handleChange}
+                        required 
+                    />
+                </div>
+
+                <div>
+                    <div className="flex justify-between items-center mb-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Password</label>
+                        {isLogin && <a href="#" className="text-[10px] text-blue-600 font-semibold hover:underline">Forgot?</a>}
+                    </div>
+                    <input 
+                        name="password" 
+                        type="password" 
+                        placeholder="••••••••" 
+                        className="w-full px-3 py-2.5 text-sm font-semibold text-slate-700 bg-slate-50 border border-slate-200 rounded focus:border-slate-900 focus:bg-white focus:outline-none transition-all placeholder-slate-400"
+                        onChange={handleChange}
+                        required 
+                    />
+                </div>
+
+                <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full mt-6 bg-slate-900 hover:bg-black text-white text-sm font-bold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                >
+                    {loading ? "Processing..." : (isLogin ? "Access Terminal" : "Register Account")}
+                    {!loading && <ArrowRight size={16} />}
+                </button>
+            </form>
+
+            {/* Toggle Login/Signup */}
+            <div className="mt-8 text-center border-t border-slate-100 pt-6">
+                <p className="text-xs text-slate-500 font-medium">
+                    {isLogin ? "New to PaperProp?" : "Already have an account?"}
+                    <button 
+                        onClick={() => { setError(''); setIsLogin(!isLogin); }} 
+                        className="ml-2 text-emerald-600 font-bold hover:underline focus:outline-none"
+                    >
+                        {isLogin ? "Open Simulated Account" : "Sign In"}
+                    </button>
+                </p>
             </div>
-
-            <div className="relative">
-                <Lock size={14} className="absolute top-2.5 left-3 text-gray-400" />
-                <input name="password" type="password" placeholder="Password" onChange={handleChange} className="w-full pl-9 pr-3 py-2 text-xs font-bold border border-gray-200 rounded focus:border-orange-500 outline-none" />
-            </div>
-        </div>
-
-        <button onClick={handleSubmit} disabled={loading} className="w-full mt-6 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold py-2.5 rounded shadow-md hover:shadow-lg transition-all flex justify-center items-center gap-2">
-            {loading ? <Loader size={14} className="animate-spin"/> : (isLogin ? "ACCESS TERMINAL" : "CREATE ACCOUNT")}
-            {!loading && <ArrowRight size={14} />}
-        </button>
-
-        {/* AFFILIATE PLACEHOLDER */}
-        <div className="mt-6 pt-4 border-t border-gray-100 text-center">
-            <p className="text-[9px] text-gray-400 mb-2">Don't have a Broker Account?</p>
-            <button className="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded hover:bg-blue-100 transition-colors">
-                Open Free Demat Account (Upstox)
-            </button>
         </div>
       </div>
     </div>
