@@ -105,7 +105,7 @@ const AuthScreen = ({ onLoginSuccess }) => {
                     </div>
                     <div>
                         <h3 className="text-lg font-bold text-zinc-900 leading-tight">Risk-Free Capital</h3>
-                        <p className="text-sm text-zinc-500 font-medium mt-1">Test strategies with ₹50 Lacs virtual buying power.</p>
+                        <p className="text-sm text-zinc-500 font-medium mt-1">Test strategies with ₹50 Lacs virtual capital.</p>
                     </div>
                 </div>
             </div>
