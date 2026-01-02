@@ -391,37 +391,41 @@ export default function App() {
   // --- RENDER LOGIN SCREEN ---
   return (
     <div className="w-screen h-screen bg-[#f0f2f5] flex flex-col overflow-hidden font-sans select-none">
-        <div className="bg-[#fcfdfe] border-b border-gray-300 px-2 py-0.5 flex gap-3 text-[11px] text-gray-600 shadow-sm z-10">{['File','Market','Orders And Trades','Preferences','Surveillance','Masters','Tools','Scanner','Funds','Add-In','Help'].map(m => (<span key={m} className="hover:bg-gray-200 px-1 cursor-pointer">{m}</span>))}</div>
-        <div className="flex-1 relative flex items-center justify-center">
+        {/* Top Menu Bar */}
+        <div className="bg-[#fcfdfe] border-b border-gray-300 px-2 py-0.5 flex gap-3 text-[11px] text-gray-600 shadow-sm z-10">
+            {['File','Market','Orders And Trades','Preferences','Surveillance','Masters','Tools','Scanner','Funds','Add-In','Help'].map(m => (<span key={m} className="hover:bg-gray-200 px-1 cursor-pointer">{m}</span>))}
+        </div>
+        
+        {/* Main Login Area */}
+        <div className="flex-1 relative flex items-center justify-center bg-[#f0f2f5]">
+            {/* Background Pattern */}
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Svg.svg/2048px-Svg.svg.png')] bg-center bg-no-repeat bg-contain"></div>
             
-            {/* [NEW] DYNAMIC AUTH FLOW */}
-            <div className="bg-white w-[650px] h-[350px] shadow-2xl flex rounded-sm overflow-hidden z-20">
-                <div className="w-[35%] bg-gradient-to-br from-[#ff9a44] to-[#fc6076] relative flex flex-col items-center justify-center text-white overflow-hidden">
-                    <div className="text-7xl font-extrabold select-none opacity-90 drop-shadow-md">X</div>
-                    <div className="text-xl font-bold tracking-widest mt-[-5px] drop-shadow-sm">XCHANGE</div>
-                    <div className="text-[10px] opacity-80 uppercase tracking-wide">Trading System</div>
-                    <div className="absolute bottom-[-40px] left-0 w-full h-32 bg-white/10 transform -skew-y-12 origin-bottom-left"></div>
-                </div>
-                
-                <div className="w-[65%] bg-white relative">
-                    {/* Step 1: Secure Login/Register (Replaces old ID screen) */}
-                    {step === 1 && (
-                        <AuthScreen onLoginSuccess={(user, token) => {
-                            setCurrentUserId(user.username); // Set the real DB username
-                            // Optional: Save token to localStorage here if you want persistence
-                            setStep(2); // Move to Download Screen
-                        }} />
-                    )}
+            {/* [FIXED] DIRECTLY RENDER AUTH SCREEN (Clean Container) */}
+            <div className="z-20">
+                {step === 1 && (
+                    <AuthScreen onLoginSuccess={(user, token) => {
+                        setCurrentUserId(user.username);
+                        setStep(2); 
+                    }} />
+                )}
 
-                    {/* Step 2: Fake Download Effect (Kept for realism) */}
-                    {step === 2 && <ScreenDownload onNext={() => setIsLoggedIn(true)} />} 
-                </div>
+                {/* Step 2: Download Progress Popup */}
+                {step === 2 && (
+                    <div className="bg-white w-[400px] h-[250px] shadow-2xl rounded-sm border border-gray-300 relative z-20">
+                        <ScreenDownload onNext={() => setIsLoggedIn(true)} />
+                    </div>
+                )}
             </div>
 
             {showRisk && <RiskModal onAgree={() => setIsLoggedIn(true)} />}
         </div>
-        <div className="bg-[#fcfdfe] border-t border-gray-300 px-2 py-0.5 flex justify-end gap-4 text-[10px] text-gray-600 shadow-sm h-6 items-center"><div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div><span className="font-bold">NSECM</span></div><div className="flex items-center gap-1"><div className="flex gap-0.5"><div className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-orange-400 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div></div><span className="font-bold">Feed</span></div></div>
+        
+        {/* Bottom Status Bar */}
+        <div className="bg-[#fcfdfe] border-t border-gray-300 px-2 py-0.5 flex justify-end gap-4 text-[10px] text-gray-600 shadow-sm h-6 items-center">
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div><span className="font-bold">NSECM</span></div>
+            <div className="flex items-center gap-1"><div className="flex gap-0.5"><div className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-orange-400 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div></div><span className="font-bold">Feed</span></div>
+        </div>
     </div>
   );
 }
