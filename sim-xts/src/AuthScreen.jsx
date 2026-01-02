@@ -49,46 +49,64 @@ const AuthScreen = ({ onLoginSuccess }) => {
 
   return (
     <div className="w-full h-full flex font-sans bg-zinc-50 overflow-hidden relative">
+      {/* Custom Styles for Floating Animation */}
+      <style>{`
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+          100% { transform: translateY(0px); }
+        }
+        .animate-float-slow { animation: float 6s ease-in-out infinite; }
+        .animate-float-medium { animation: float 5s ease-in-out infinite; animation-delay: 0.5s; }
+        .animate-float-fast { animation: float 5.5s ease-in-out infinite; animation-delay: 1s; }
+      `}</style>
+
       {/* Background Pattern & Blurs */}
       <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px] opacity-60 pointer-events-none"></div>
-      <div className="absolute top-[-10%] right-[35%] w-[600px] h-[600px] bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob pointer-events-none"></div>
+      <div className="absolute top-[-10%] right-[40%] w-[600px] h-[600px] bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob pointer-events-none"></div>
       <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000 pointer-events-none"></div>
 
       {/* LEFT SIDE: USP TILES (60%) */}
-      <div className="hidden md:flex w-[60%] relative flex-col justify-center px-20 z-10">
+      <div className="hidden md:flex w-[60%] relative flex-col justify-center items-center z-10 pl-10">
          
-         <div className="space-y-8"> {/* Container for the stepped tiles */}
+         <div className="flex flex-col gap-8 w-full max-w-2xl"> {/* Container wraps the diagonal flow */}
             
-            {/* USP TILE 1: Real-Time */}
-            <div className="flex items-center gap-5 p-5 bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/50 w-[380px] hover:scale-[1.02] transition-transform duration-300 ml-0">
-                <div className="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 text-white shrink-0">
-                    <Zap size={28} fill="currentColor" className="text-white" />
-                </div>
-                <div>
-                    <h3 className="text-lg font-bold text-zinc-900 leading-tight">Live Market Data</h3>
-                    <p className="text-sm text-zinc-500 font-medium">Experience real-time feed latency under 20ms.</p>
-                </div>
-            </div>
-
-            {/* USP TILE 2: Analytics (Shifted Right) */}
-            <div className="flex items-center gap-5 p-5 bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/50 w-[380px] hover:scale-[1.02] transition-transform duration-300 ml-16">
-                <div className="h-14 w-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200 text-white shrink-0">
-                    <BarChart2 size={28} />
-                </div>
-                <div>
-                    <h3 className="text-lg font-bold text-zinc-900 leading-tight">Deep Analytics</h3>
-                    <p className="text-sm text-zinc-500 font-medium">Track P&L, drawdowns, and Greeks in real-time.</p>
+            {/* USP TILE 1: Real-Time (Left aligned relative to group) */}
+            <div className="animate-float-slow self-start translate-x-12">
+                <div className="flex items-center gap-5 p-5 bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 w-[360px] hover:scale-[1.02] transition-transform duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-200 text-white shrink-0">
+                        <Zap size={28} fill="currentColor" className="text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-zinc-900 leading-tight">Live Market Data</h3>
+                        <p className="text-sm text-zinc-500 font-medium mt-1">Experience real-time feed latency under 20ms.</p>
+                    </div>
                 </div>
             </div>
 
-            {/* USP TILE 3: Risk Free (Shifted More Right) */}
-            <div className="flex items-center gap-5 p-5 bg-white/80 backdrop-blur-sm rounded-3xl shadow-lg border border-white/50 w-[380px] hover:scale-[1.02] transition-transform duration-300 ml-32">
-                <div className="h-14 w-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200 text-white shrink-0">
-                    <ShieldCheck size={28} />
+            {/* USP TILE 2: Analytics (Center aligned relative to group) */}
+            <div className="animate-float-medium self-center pr-12">
+                <div className="flex items-center gap-5 p-5 bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 w-[360px] hover:scale-[1.02] transition-transform duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-200 text-white shrink-0">
+                        <BarChart2 size={28} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-zinc-900 leading-tight">Deep Analytics</h3>
+                        <p className="text-sm text-zinc-500 font-medium mt-1">Track P&L, drawdowns, and Greeks in real-time.</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-lg font-bold text-zinc-900 leading-tight">Risk-Free Capital</h3>
-                    <p className="text-sm text-zinc-500 font-medium">Test strategies with ₹10Cr virtual buying power.</p>
+            </div>
+
+            {/* USP TILE 3: Risk Free (Right aligned relative to group) */}
+            <div className="animate-float-fast self-end mr-20">
+                <div className="flex items-center gap-5 p-5 bg-white/80 backdrop-blur-sm rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/60 w-[360px] hover:scale-[1.02] transition-transform duration-300">
+                    <div className="h-14 w-14 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-200 text-white shrink-0">
+                        <ShieldCheck size={28} />
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-zinc-900 leading-tight">Risk-Free Capital</h3>
+                        <p className="text-sm text-zinc-500 font-medium mt-1">Test strategies with ₹50 Lacs virtual buying power.</p>
+                    </div>
                 </div>
             </div>
 
