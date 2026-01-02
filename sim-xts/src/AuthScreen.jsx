@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, ArrowRight, ArrowLeft, LineChart } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ArrowLeft, LineChart, Activity, CheckCircle } from 'lucide-react';
 
 const AuthScreen = ({ onLoginSuccess }) => {
   const [view, setView] = useState('login');
@@ -54,11 +54,12 @@ const AuthScreen = ({ onLoginSuccess }) => {
       <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob pointer-events-none"></div>
       <div className="absolute bottom-[-20%] left-[-10%] w-[600px] h-[600px] bg-violet-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000 pointer-events-none"></div>
 
-      {/* LEFT SIDE: FRIENDLY VISUALS (60%) */}
+      {/* LEFT SIDE: DASHBOARD COMPOSITION (60%) */}
       <div className="hidden md:flex w-[60%] relative items-center justify-center p-16 z-10">
-         <div className="relative w-full max-w-lg">
-            {/* Mockup "3D Card" Illustration */}
-            <div className="bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-zinc-100 p-6 transform rotate-[-3deg] hover:rotate-0 transition-all duration-700 ease-out">
+         <div className="relative w-full max-w-lg h-[400px]"> {/* Container for floating tiles */}
+            
+            {/* TILE 1: MAIN P&L CARD (Center) */}
+            <div className="absolute top-10 left-0 right-0 z-20 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-zinc-100 p-6 transform rotate-[-2deg] hover:rotate-0 transition-all duration-700 ease-out">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
@@ -70,7 +71,6 @@ const AuthScreen = ({ onLoginSuccess }) => {
                 </div>
                 <div className="space-y-4">
                     <div className="h-24 bg-gradient-to-r from-indigo-50 to-violet-50 rounded-2xl border border-indigo-100 flex items-center justify-center relative overflow-hidden">
-                        {/* Simulated Chart Line */}
                         <svg viewBox="0 0 100 40" className="w-full h-full absolute bottom-0 text-indigo-600 opacity-20" fill="none" stroke="currentColor" strokeWidth="2">
                             <path d="M0 30 C 20 10, 40 35, 60 15 S 80 25, 100 5" />
                         </svg>
@@ -79,25 +79,61 @@ const AuthScreen = ({ onLoginSuccess }) => {
                             <div className="text-3xl font-extrabold text-zinc-900">+ ₹1,24,500</div>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
-                            <div className="text-xs text-zinc-500 font-bold mb-1">NIFTY 21500 CE</div>
-                            <div className="text-lg font-bold text-emerald-600">+₹15,200</div>
-                        </div>
-                        <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
-                            <div className="text-xs text-zinc-500 font-bold mb-1">BANKNIFTY FUT</div>
-                            <div className="text-lg font-bold text-red-500">-₹4,100</div>
-                        </div>
-                    </div>
                 </div>
             </div>
+
+            {/* TILE 2: MINI CHART (Top Right - Floating Behind) */}
+            <div className="absolute top-[-20px] right-[-30px] z-10 bg-white rounded-2xl shadow-xl border border-zinc-100 p-4 w-48 transform rotate-[6deg] animate-pulse">
+                <div className="flex items-center gap-2 mb-2">
+                    <Activity size={14} className="text-violet-500" />
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase">BankNifty Chart</span>
+                </div>
+                <div className="flex items-end gap-1 h-12">
+                    <div className="w-2 bg-emerald-400 h-[40%] rounded-sm"></div>
+                    <div className="w-2 bg-red-400 h-[60%] rounded-sm"></div>
+                    <div className="w-2 bg-emerald-400 h-[80%] rounded-sm"></div>
+                    <div className="w-2 bg-emerald-400 h-[50%] rounded-sm"></div>
+                    <div className="w-2 bg-emerald-400 h-[90%] rounded-sm"></div>
+                </div>
+            </div>
+
+            {/* TILE 3: RECENT TRADES (Bottom Right - Floating Front) */}
+            <div className="absolute bottom-[-10px] right-[-10px] z-30 bg-white rounded-2xl shadow-xl border border-zinc-100 p-4 w-56 transform rotate-[3deg]">
+                 <div className="text-[10px] font-bold text-zinc-400 uppercase mb-3">Recent Executions</div>
+                 <div className="space-y-2">
+                     <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                             <span className="text-xs font-bold text-zinc-700">NIFTY 21500 CE</span>
+                         </div>
+                         <span className="text-xs font-bold text-emerald-600">BUY</span>
+                     </div>
+                     <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-2">
+                             <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                             <span className="text-xs font-bold text-zinc-700">BANKNIFTY FUT</span>
+                         </div>
+                         <span className="text-xs font-bold text-red-600">SELL</span>
+                     </div>
+                 </div>
+            </div>
+
+             {/* TILE 4: MARKET STATUS (Bottom Left - Subtle) */}
+             <div className="absolute bottom-[20px] left-[-20px] z-0 bg-zinc-900 rounded-2xl shadow-lg p-4 w-40 transform rotate-[-4deg] opacity-90">
+                <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle size={14} className="text-emerald-400" />
+                    <span className="text-[10px] font-bold text-zinc-400">System Status</span>
+                </div>
+                <div className="text-sm font-bold text-white">Market Open</div>
+                <div className="text-[10px] text-zinc-500">Latency: 12ms</div>
+             </div>
+
          </div>
       </div>
 
       {/* RIGHT SIDE: MODERN FORM (40%) */}
       <div className="w-full md:w-[40%] flex flex-col justify-center p-8 md:p-16 bg-white/80 backdrop-blur-md z-20 shadow-[-10px_0_30px_rgba(0,0,0,0.03)]">
          <div className="max-w-sm w-full mx-auto">
-            
             {/* VIEW: FORGOT PASSWORD */}
             {view === 'forgot' && (
                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
