@@ -8,44 +8,42 @@ import SnapQuote from './SnapQuote';
 import DraggableWindow from './DraggableWindow';
 import Funds from './Funds';
 import ModifyWindow from './ModifyWindow';
-import AdminPanel from './AdminPanel'; // Import Admin Panel
+import AdminPanel from './AdminPanel'; 
+import AuthScreen from './AuthScreen'; // [NEW] Phase 16 Security
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
-// --- LOGIN COMPONENT ---
-const ScreenUserId = ({ onNext, setGlobalId }) => {
-  const [localText, setLocalText] = useState("X14AD43"); 
+// --- COMPONENTS (Standard) ---
+const XtsButton = ({ text, onClick, className = '' }) => (<button onClick={onClick} className={`bg-gradient-to-b from-[#ff8c00] to-[#ff6a00] hover:from-[#e65c00] hover:to-[#e65c00] text-white font-bold py-1 px-4 text-xs border border-[#cd5c00] shadow-sm ${className}`}>{text}</button>);
 
-  const handleSubmit = () => {
-    if(!localText) return alert("Please enter a User ID");
-    setGlobalId(localText.toUpperCase()); 
-    onNext();
-  };
-
+const ScreenDownload = ({ onNext }) => { 
+  const [isComplete, setIsComplete] = useState(false); 
+  useEffect(() => { 
+    const timer = setTimeout(() => setIsComplete(true), 1500); 
+    return () => clearTimeout(timer); 
+  }, []); 
   return (
-    <div className="w-full h-full p-8 flex flex-col justify-center relative">
+    <div className="w-full h-full p-6 flex flex-col relative">
       <div className="absolute top-2 right-2 text-gray-400 cursor-pointer"><X size={16} /></div>
-      <h2 className="text-2xl text-gray-600 font-normal mb-1">Login</h2>
-      <p className="text-xs text-gray-400 mb-6">Enter your details below</p>
-      <label className="text-[10px] font-bold text-gray-500 uppercase mb-1">USER ID</label>
-      <div className="flex gap-2">
-        <input 
-          type="text" 
-          value={localText} 
-          onChange={(e) => setLocalText(e.target.value)}
-          className="border border-gray-300 p-1 text-sm text-blue-700 font-bold w-48 focus:outline-none focus:border-orange-400 shadow-inner"
-        />
-        <button onClick={handleSubmit} className="bg-white border border-gray-400 text-xs px-3 hover:bg-gray-50 shadow-sm font-bold text-gray-700">GO</button>
+      <h2 className="text-xl text-gray-500 font-normal mb-4">Download Instruments</h2>
+      <p className="text-[10px] text-gray-500 mb-2 font-bold">Choose Exchange Segments:</p>
+      <div className="border border-gray-300 text-[11px] mb-4 bg-white">
+        <div className="bg-[#f0f0f0] flex border-b border-gray-300 py-1 px-2 font-bold text-gray-700">
+          <span className="w-12">Select</span><span className="w-24">Segment</span><span>Status</span>
+        </div>
+        {['NSEFO', 'BSEFO'].map(seg => (
+          <div key={seg} className="flex border-b border-gray-200 py-1 px-2 items-center">
+            <input type="checkbox" checked readOnly className="w-12" />
+            <span className="w-24 font-semibold text-gray-700">{seg}</span>
+            <span className={`${isComplete ? 'text-green-600' : 'text-blue-600'}`}>{isComplete ? 'Download Complete.' : 'Downloading...'}</span>
+          </div>
+        ))}
       </div>
-      <div className="mt-12 text-right pr-4"><a href="#" className="text-orange-500 text-[10px] font-bold hover:underline">UNBLOCK USER</a></div>
+      {isComplete && (<div className="mt-auto"><XtsButton text="NEXT" onClick={onNext} /></div>)}
     </div>
   );
 };
 
-// --- COMPONENTS (Standard) ---
-const XtsButton = ({ text, onClick, className = '' }) => (<button onClick={onClick} className={`bg-gradient-to-b from-[#ff8c00] to-[#ff6a00] hover:from-[#e65c00] hover:to-[#e65c00] text-white font-bold py-1 px-4 text-xs border border-[#cd5c00] shadow-sm ${className}`}>{text}</button>);
-const ScreenDownload = ({ onNext }) => { const [isComplete, setIsComplete] = useState(false); useEffect(() => { const timer = setTimeout(() => setIsComplete(true), 1500); return () => clearTimeout(timer); }, []); return (<div className="w-full h-full p-6 flex flex-col relative"><div className="absolute top-2 right-2 text-gray-400 cursor-pointer"><X size={16} /></div><h2 className="text-xl text-gray-500 font-normal mb-4">Download Instruments</h2><p className="text-[10px] text-gray-500 mb-2 font-bold">Choose Exchange Segments:</p><div className="border border-gray-300 text-[11px] mb-4 bg-white"><div className="bg-[#f0f0f0] flex border-b border-gray-300 py-1 px-2 font-bold text-gray-700"><span className="w-12">Select</span><span className="w-24">Segment</span><span>Status</span></div>{['NSEFO', 'BSEFO'].map(seg => (<div key={seg} className="flex border-b border-gray-200 py-1 px-2 items-center"><input type="checkbox" checked readOnly className="w-12" /><span className="w-24 font-semibold text-gray-700">{seg}</span><span className={`${isComplete ? 'text-green-600' : 'text-blue-600'}`}>{isComplete ? 'Download Complete.' : 'Downloading...'}</span></div>))}</div>{isComplete && (<div className="mt-auto"><XtsButton text="NEXT" onClick={onNext} /></div>)}</div>);};
-const ScreenPassword = ({ onLogin, userId }) => { const [showPass, setShowPass] = useState(false); const [checked, setChecked] = useState(false); return (<div className="w-full h-full p-8 flex flex-col justify-center relative"><div className="absolute top-2 right-2 text-gray-400 cursor-pointer"><X size={16} /></div><h2 className="text-2xl text-gray-600 font-normal mb-1">Login</h2><p className="text-xs text-gray-400 mb-6">Enter your details below</p><div className="mb-3"><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">USER ID</label><div className="flex gap-2"><input type="text" value={userId} disabled className="bg-gray-100 border border-gray-300 p-1 text-sm text-gray-500 w-full" /><button className="bg-white border border-gray-300 px-2 text-[10px] font-bold text-gray-500">GO</button></div></div><div className="mb-2"><label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">PASSWORD</label><div className="relative"><input type={showPass ? "text" : "password"} className="border border-gray-300 p-1 text-sm w-full focus:outline-none focus:border-orange-400 shadow-inner" /><div className="absolute right-2 top-1.5 cursor-pointer text-gray-400" onClick={() => setShowPass(!showPass)}>{showPass ? <EyeOff size={14}/> : <Eye size={14}/>}</div></div><a href="#" className="text-orange-500 text-[9px] font-bold mt-1 block hover:underline">FORGOT PASSWORD ?</a></div><div className="flex items-center gap-3 mb-6 mt-2"><img src="https://images.unsplash.com/photo-1470252649378-9c29740c9fa8?w=50&h=50&fit=crop" className="w-10 h-10 border border-gray-400" alt="Security" /><label className="text-[10px] font-bold text-gray-600 flex items-center gap-2 cursor-pointer select-none"><input type="checkbox" checked={checked} onChange={(e) => setChecked(e.target.checked)} />CONFIRM IMAGE</label></div><XtsButton text="LOGIN" onClick={onLogin} className="w-full py-2 text-sm" /></div>);};
 const RiskModal = ({ onAgree }) => (<div className="fixed inset-0 bg-black/50 backdrop-blur-[1px] z-50 flex items-center justify-center font-sans"><div className="bg-white w-[600px] flex shadow-2xl animate-in fade-in zoom-in duration-200"><div className="w-1/3 bg-gradient-to-br from-[#ff9a44] to-[#fc6076] relative flex flex-col items-center justify-center text-white overflow-hidden"><div className="text-6xl font-extrabold select-none opacity-90">X</div><div className="text-lg font-bold tracking-widest mt-[-5px]">XCHANGE</div><div className="text-[10px] opacity-80 uppercase tracking-wide">Trading System</div><div className="absolute bottom-[-20px] left-0 w-full h-20 bg-white transform -skew-y-6 origin-bottom-left"></div></div><div className="w-2/3 p-6 pt-8"><h3 className="font-bold text-gray-800 text-sm mb-4">RISK DISCLOSURES ON DERIVATIVES</h3><ul className="list-disc pl-5 space-y-2 text-[11px] text-gray-600 leading-tight mb-8"><li>9 out of 10 individual traders in equity Futures and Options Segment, incurred net losses.</li><li>On an average, loss makers registered net trading loss close to ₹ 50,000.</li></ul><div className="flex gap-2"><XtsButton text="Agree" onClick={onAgree} className="flex-1 py-1.5" /><XtsButton text="Logout" className="flex-1 py-1.5" /></div></div></div></div>);
 
 // --- MAIN APP ---
@@ -91,6 +89,7 @@ export default function App() {
       setIsLoadingData(true); 
       setIsOffline(false);
       
+      // Updated to fetch by username
       fetch(`${API_URL}/user/${currentUserId}`)
         .then(res => res.json())
         .then(data => {
@@ -309,7 +308,7 @@ export default function App() {
     };
     window.addEventListener('keydown', handleGlobalKeys);
     return () => window.removeEventListener('keydown', handleGlobalKeys);
-  }, [isLoggedIn, selectedScript, orderWindow, liveSelectedData, selectedOrderId, orders, currentUserId]); // Included currentUserId in dependencies
+  }, [isLoggedIn, selectedScript, orderWindow, liveSelectedData, selectedOrderId, orders, currentUserId]);
 
   // --- RENDER ---
   if (isLoggedIn) {
@@ -395,14 +394,31 @@ export default function App() {
         <div className="bg-[#fcfdfe] border-b border-gray-300 px-2 py-0.5 flex gap-3 text-[11px] text-gray-600 shadow-sm z-10">{['File','Market','Orders And Trades','Preferences','Surveillance','Masters','Tools','Scanner','Funds','Add-In','Help'].map(m => (<span key={m} className="hover:bg-gray-200 px-1 cursor-pointer">{m}</span>))}</div>
         <div className="flex-1 relative flex items-center justify-center">
             <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Svg.svg/2048px-Svg.svg.png')] bg-center bg-no-repeat bg-contain"></div>
+            
+            {/* [NEW] DYNAMIC AUTH FLOW */}
             <div className="bg-white w-[650px] h-[350px] shadow-2xl flex rounded-sm overflow-hidden z-20">
-                <div className="w-[35%] bg-gradient-to-br from-[#ff9a44] to-[#fc6076] relative flex flex-col items-center justify-center text-white overflow-hidden"><div className="text-7xl font-extrabold select-none opacity-90 drop-shadow-md">X</div><div className="text-xl font-bold tracking-widest mt-[-5px] drop-shadow-sm">XCHANGE</div><div className="text-[10px] opacity-80 uppercase tracking-wide">Trading System</div><div className="absolute bottom-[-40px] left-0 w-full h-32 bg-white/10 transform -skew-y-12 origin-bottom-left"></div></div>
-                <div className="w-[65%] bg-white">
-                    {step === 1 && <ScreenUserId onNext={() => setStep(2)} setGlobalId={setCurrentUserId} />}
-                    {step === 2 && <ScreenDownload onNext={() => setStep(3)} />}
-                    {step === 3 && <ScreenPassword onLogin={() => setIsLoggedIn(true)} userId={currentUserId} />}
+                <div className="w-[35%] bg-gradient-to-br from-[#ff9a44] to-[#fc6076] relative flex flex-col items-center justify-center text-white overflow-hidden">
+                    <div className="text-7xl font-extrabold select-none opacity-90 drop-shadow-md">X</div>
+                    <div className="text-xl font-bold tracking-widest mt-[-5px] drop-shadow-sm">XCHANGE</div>
+                    <div className="text-[10px] opacity-80 uppercase tracking-wide">Trading System</div>
+                    <div className="absolute bottom-[-40px] left-0 w-full h-32 bg-white/10 transform -skew-y-12 origin-bottom-left"></div>
+                </div>
+                
+                <div className="w-[65%] bg-white relative">
+                    {/* Step 1: Secure Login/Register (Replaces old ID screen) */}
+                    {step === 1 && (
+                        <AuthScreen onLoginSuccess={(user, token) => {
+                            setCurrentUserId(user.username); // Set the real DB username
+                            // Optional: Save token to localStorage here if you want persistence
+                            setStep(2); // Move to Download Screen
+                        }} />
+                    )}
+
+                    {/* Step 2: Fake Download Effect (Kept for realism) */}
+                    {step === 2 && <ScreenDownload onNext={() => setIsLoggedIn(true)} />} 
                 </div>
             </div>
+
             {showRisk && <RiskModal onAgree={() => setIsLoggedIn(true)} />}
         </div>
         <div className="bg-[#fcfdfe] border-t border-gray-300 px-2 py-0.5 flex justify-end gap-4 text-[10px] text-gray-600 shadow-sm h-6 items-center"><div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div><span className="font-bold">NSECM</span></div><div className="flex items-center gap-1"><div className="flex gap-0.5"><div className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-orange-400 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div></div><span className="font-bold">Feed</span></div></div>
