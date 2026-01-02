@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wifi, WifiOff } from 'lucide-react'; 
+import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User } from 'lucide-react'; 
 import MarketWatch from './MarketWatch';
 import OrderWindow from './OrderWindow';
 import OrderBook from './OrderBook';
@@ -9,53 +9,20 @@ import DraggableWindow from './DraggableWindow';
 import Funds from './Funds';
 import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; 
-import AuthScreen from './AuthScreen'; // Will be updated in Step 2
+import AuthScreen from './AuthScreen';
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
-
-// --- COMPONENTS (Standard) ---
-const XtsButton = ({ text, onClick, className = '' }) => (<button onClick={onClick} className={`bg-gradient-to-b from-[#ff8c00] to-[#ff6a00] hover:from-[#e65c00] hover:to-[#e65c00] text-white font-bold py-1 px-4 text-xs border border-[#cd5c00] shadow-sm ${className}`}>{text}</button>);
-
-const ScreenDownload = ({ onNext }) => { 
-  const [isComplete, setIsComplete] = useState(false); 
-  useEffect(() => { 
-    const timer = setTimeout(() => setIsComplete(true), 1500); 
-    return () => clearTimeout(timer); 
-  }, []); 
-  return (
-    <div className="w-full h-full p-6 flex flex-col relative">
-      <div className="absolute top-2 right-2 text-gray-400 cursor-pointer"><X size={16} /></div>
-      <h2 className="text-xl text-gray-500 font-normal mb-4">Download Instruments</h2>
-      <p className="text-[10px] text-gray-500 mb-2 font-bold">Choose Exchange Segments:</p>
-      <div className="border border-gray-300 text-[11px] mb-4 bg-white">
-        <div className="bg-[#f0f0f0] flex border-b border-gray-300 py-1 px-2 font-bold text-gray-700">
-          <span className="w-12">Select</span><span className="w-24">Segment</span><span>Status</span>
-        </div>
-        {['NSEFO', 'BSEFO'].map(seg => (
-          <div key={seg} className="flex border-b border-gray-200 py-1 px-2 items-center">
-            <input type="checkbox" checked readOnly className="w-12" />
-            <span className="w-24 font-semibold text-gray-700">{seg}</span>
-            <span className={`${isComplete ? 'text-green-600' : 'text-blue-600'}`}>{isComplete ? 'Download Complete.' : 'Downloading...'}</span>
-          </div>
-        ))}
-      </div>
-      {isComplete && (<div className="mt-auto"><XtsButton text="NEXT" onClick={onNext} /></div>)}
-    </div>
-  );
-};
-
-const RiskModal = ({ onAgree }) => (<div className="fixed inset-0 bg-black/50 backdrop-blur-[1px] z-50 flex items-center justify-center font-sans"><div className="bg-white w-[600px] flex shadow-2xl animate-in fade-in zoom-in duration-200"><div className="w-1/3 bg-gradient-to-br from-[#ff9a44] to-[#fc6076] relative flex flex-col items-center justify-center text-white overflow-hidden"><div className="text-6xl font-extrabold select-none opacity-90">X</div><div className="text-lg font-bold tracking-widest mt-[-5px]">XCHANGE</div><div className="text-[10px] opacity-80 uppercase tracking-wide">Trading System</div><div className="absolute bottom-[-20px] left-0 w-full h-20 bg-white transform -skew-y-6 origin-bottom-left"></div></div><div className="w-2/3 p-6 pt-8"><h3 className="font-bold text-gray-800 text-sm mb-4">RISK DISCLOSURES ON DERIVATIVES</h3><ul className="list-disc pl-5 space-y-2 text-[11px] text-gray-600 leading-tight mb-8"><li>9 out of 10 individual traders in equity Futures and Options Segment, incurred net losses.</li><li>On an average, loss makers registered net trading loss close to ₹ 50,000.</li></ul><div className="flex gap-2"><XtsButton text="Agree" onClick={onAgree} className="flex-1 py-1.5" /><XtsButton text="Logout" className="flex-1 py-1.5" /></div></div></div></div>);
 
 // --- MAIN APP ---
 
 export default function App() {
   const [step, setStep] = useState(1);
-  const [showRisk, setShowRisk] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("X14AD43"); 
   const [showAdmin, setShowAdmin] = useState(false); 
+  const [activeTab, setActiveTab] = useState('dashboard'); // New State for Sidebar Navigation
 
   // WINDOW STATES
   const [selectedScript, setSelectedScript] = useState(null); 
@@ -68,7 +35,7 @@ export default function App() {
   
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   
-  // DEFAULT STATES
+  // DEFAULT STATES (Starting Capital: 50L)
   const [funds, setFunds] = useState({ opening: 5000000, payin: 0, payout: 0, usedMargin: 0, realizedMtm: 0, unrealizedMtm: 0, available: 5000000 });
   const [orders, setOrders] = useState([]);
   const [logs, setLogs] = useState([]);
@@ -304,13 +271,13 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleGlobalKeys);
   }, [isLoggedIn, selectedScript, orderWindow, liveSelectedData, selectedOrderId, orders, currentUserId]);
 
-  // --- RENDER (LOGGED IN - TERMINAL) ---
+  // --- RENDER (LOGGED IN - DASHBOARD) ---
   if (isLoggedIn) {
     if (isLoadingData) {
         return (
-            <div className="w-screen h-screen bg-[#f0f2f5] flex items-center justify-center flex-col">
-                <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-                <div className="text-gray-600 font-bold text-sm">Synchronizing with Exchange...</div>
+            <div className="w-screen h-screen bg-[#f8f9fa] flex items-center justify-center flex-col font-sans">
+                <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <div className="text-gray-600 font-bold text-sm tracking-wide">Synchronizing Dashboard...</div>
             </div>
         );
     }
@@ -320,91 +287,140 @@ export default function App() {
     }
 
     return (
-        <div className="w-screen h-screen bg-[#f0f2f5] flex flex-col overflow-hidden font-sans select-none">
-             {/* TOP MENU - ONLY VISIBLE WHEN LOGGED IN */}
-             <div className="bg-[#fcfdfe] border-b border-gray-300 px-2 py-0.5 flex gap-3 text-[11px] text-gray-600 shadow-sm z-10">{['File','Market','Orders And Trades','Preferences','Surveillance','Masters','Tools','Scanner','Funds','Add-In','Help'].map(m => (<span key={m} className="hover:bg-gray-200 px-1 cursor-pointer">{m}</span>))}</div>
-
-            <div className="flex-1 relative flex flex-col">
-                <MarketWatch onSelectRow={(row) => setSelectedScript(row)} onDataUpdate={(data) => setMarketDataRef(data)} />
-
-                {orderWindow && (<DraggableWindow zIndex={zIndices.order} onFocus={() => bringToFront('order')} onClose={() => setOrderWindow(null)} initialX={300} initialY={150}>
-                    <OrderWindow mode={orderWindow.mode} symbolData={orderWindow.data} availableFunds={funds.available} onClose={() => setOrderWindow(null)} onSubmit={handleOrderSubmit} />
-                  </DraggableWindow>)}
-
-                {modifyWindowData && (<DraggableWindow zIndex={zIndices.modify} onFocus={() => bringToFront('modify')} onClose={() => setModifyWindowData(null)} initialX={350} initialY={200}>
-                    <ModifyWindow order={modifyWindowData} availableFunds={funds.available} onClose={() => setModifyWindowData(null)} onConfirm={handleModifyConfirm} />
-                  </DraggableWindow>)}
-
-                {showOrderBook && (<DraggableWindow zIndex={zIndices.book} onFocus={() => bringToFront('book')} onClose={() => setShowOrderBook(false)} initialX={100} initialY={400}>
-                    <OrderBook orders={orders} selectedOrderId={selectedOrderId} onSelectRow={setSelectedOrderId} onClose={() => setShowOrderBook(false)} />
-                  </DraggableWindow>)}
-                
-                {showPositions && (<DraggableWindow zIndex={zIndices.pos} onFocus={() => bringToFront('pos')} onClose={() => setShowPositions(false)} initialX={150} initialY={150}>
-                    <NetPositions 
-                        orders={orders} 
-                        marketData={marketDataRef || []} 
-                        onClose={() => setShowPositions(false)} 
-                        onBulkSquareOff={handleBulkSquareOff} 
-                    />
-                  </DraggableWindow>)}
-
-                {showSnapQuote && liveSelectedData && (<DraggableWindow zIndex={zIndices.quote} onFocus={() => bringToFront('quote')} onClose={() => setShowSnapQuote(false)} initialX={400} initialY={100}>
-                    <SnapQuote symbolData={liveSelectedData} onClose={() => setShowSnapQuote(false)} onInitiateTrade={(mode) => { setOrderWindow({ mode, data: liveSelectedData }); bringToFront('order'); }} />
-                  </DraggableWindow>)}
-
-                {showFunds && (<DraggableWindow zIndex={zIndices.funds} onFocus={() => bringToFront('funds')} onClose={() => setShowFunds(false)} initialX={500} initialY={200}>
-                    <Funds fundsData={funds} onClose={() => setShowFunds(false)} />
-                  </DraggableWindow>)}
-
-                <div className="h-32 bg-white border-t border-gray-400 flex flex-col text-xs">
-                    <div className="bg-[#e0e0e0] border-b border-gray-300 px-2 py-0.5 font-bold text-gray-700 text-[10px] flex justify-between items-center">
-                        <span>XTS Notifications</span>
-                        <div className="flex items-center gap-1 px-2">
-                            {isOffline ? <WifiOff size={10} color="red" /> : <Wifi size={10} color="green" />}
-                            <span className={`text-[9px] font-bold ${isOffline ? 'text-red-600' : 'text-green-600'}`}>{isOffline ? 'OFFLINE' : 'CONNECTED'}</span>
-                        </div>
+        <div className="w-screen h-screen bg-white flex font-sans overflow-hidden">
+            {/* SIDEBAR */}
+            <div className="w-20 lg:w-64 bg-white border-r border-gray-100 flex flex-col justify-between py-6 shadow-sm z-20">
+                <div className="px-6">
+                    <div className="flex items-center gap-3 mb-10">
+                         <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">P</span>
+                         </div>
+                         <span className="text-xl font-bold text-gray-900 hidden lg:block">PaperProp</span>
                     </div>
-                    <div className="flex-1 p-1 overflow-y-auto font-mono text-[11px] bg-white">
-                        {logs.map((log, idx) => (
-                            <div key={idx} className="flex gap-4 border-b border-gray-100 last:border-0">
-                                <span className="text-gray-500 w-16">{log.time}</span>
-                                <span className="font-bold text-blue-900 w-16">NSECM</span>
-                                <span className="text-gray-800 flex-1">{log.msg}</span>
-                            </div>
+
+                    <nav className="space-y-2">
+                        {[
+                            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                            { id: 'positions', label: 'Positions', icon: PieChart },
+                            { id: 'orders', label: 'Orders', icon: LineChart },
+                            { id: 'settings', label: 'Settings', icon: Settings },
+                        ].map(item => (
+                            <button 
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                                    activeTab === item.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:bg-gray-50'
+                                }`}
+                            >
+                                <item.icon size={20} />
+                                <span className="hidden lg:block">{item.label}</span>
+                            </button>
                         ))}
-                    </div>
-                    <div className="flex bg-[#fcfdfe] border-t border-gray-300"><div className="px-3 py-0.5 border-r border-gray-300 bg-[#dbeaf9] font-bold text-blue-800 border-t-2 border-t-orange-400">XTS Notifications</div><div className="px-3 py-0.5 border-r border-gray-300 text-gray-600 hover:bg-gray-100">Business Logs</div><div className="px-3 py-0.5 border-r border-gray-300 text-gray-600 hover:bg-gray-100">Algo Logs</div></div>
+                    </nav>
+                </div>
+                
+                <div className="px-6">
+                    <button 
+                        onClick={() => setIsLoggedIn(false)}
+                        className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                        <LogOut size={20} />
+                        <span className="hidden lg:block">Logout</span>
+                    </button>
                 </div>
             </div>
 
-            <div className="bg-[#fcfdfe] border-t border-gray-300 px-2 py-0.5 flex justify-end gap-4 text-[10px] text-gray-600 shadow-sm h-6 items-center"><div className="flex items-center gap-1"><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div><span className="font-bold">NSECM</span></div><div className="flex items-center gap-1"><div className="flex gap-0.5"><div className="w-2 h-2 rounded-full bg-red-500 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-orange-400 shadow-sm"></div><div className="w-2 h-2 rounded-full bg-green-500 shadow-sm"></div></div><span className="font-bold">Feed</span></div></div>
+            {/* MAIN CONTENT AREA */}
+            <div className="flex-1 flex flex-col relative bg-[#f8f9fa]">
+                
+                {/* HEADER */}
+                <div className="h-16 bg-white border-b border-gray-100 px-8 flex items-center justify-between shadow-sm">
+                    <div className="flex items-center gap-4">
+                        <span className="text-gray-400 text-sm">Welcome back,</span>
+                        <span className="text-gray-900 font-bold">{currentUserId}</span>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        {/* Status Indicator */}
+                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${isOffline ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                            {isOffline ? <WifiOff size={14} /> : <Wifi size={14} />}
+                            {isOffline ? 'OFFLINE' : 'LIVE FEED'}
+                        </div>
+
+                        {/* Capital Display */}
+                        <div className="hidden md:flex flex-col items-end">
+                            <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Available Margin</span>
+                            <span className="text-indigo-600 font-black text-lg">₹{(funds.available / 100000).toFixed(2)} L</span>
+                        </div>
+                        
+                        <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+                             <User size={20} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* DASHBOARD CONTENT (Old Terminal Logic Wrapped Here) */}
+                <div className="flex-1 overflow-hidden relative p-4">
+                    {/* Render MarketWatch and Windows ONLY if on Dashboard tab */}
+                    {activeTab === 'dashboard' && (
+                        <div className="h-full w-full flex flex-col gap-4">
+                             {/* MarketWatch takes full height now */}
+                             <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
+                                 <MarketWatch onSelectRow={(row) => setSelectedScript(row)} onDataUpdate={(data) => setMarketDataRef(data)} />
+                             </div>
+                        </div>
+                    )}
+
+                    {/* FLOATING WINDOWS (Always available regardless of tab for now, or you can restrict them) */}
+                    {orderWindow && (<DraggableWindow zIndex={zIndices.order} onFocus={() => bringToFront('order')} onClose={() => setOrderWindow(null)} initialX={300} initialY={150}>
+                        <OrderWindow mode={orderWindow.mode} symbolData={orderWindow.data} availableFunds={funds.available} onClose={() => setOrderWindow(null)} onSubmit={handleOrderSubmit} />
+                      </DraggableWindow>)}
+
+                    {modifyWindowData && (<DraggableWindow zIndex={zIndices.modify} onFocus={() => bringToFront('modify')} onClose={() => setModifyWindowData(null)} initialX={350} initialY={200}>
+                        <ModifyWindow order={modifyWindowData} availableFunds={funds.available} onClose={() => setModifyWindowData(null)} onConfirm={handleModifyConfirm} />
+                      </DraggableWindow>)}
+
+                    {/* Toggle these windows via Sidebar buttons later if you want, but Hotkeys still work */}
+                    {(showOrderBook || activeTab === 'orders') && (<DraggableWindow zIndex={zIndices.book} onFocus={() => bringToFront('book')} onClose={() => {setShowOrderBook(false); if(activeTab === 'orders') setActiveTab('dashboard');}} initialX={100} initialY={400}>
+                        <OrderBook orders={orders} selectedOrderId={selectedOrderId} onSelectRow={setSelectedOrderId} onClose={() => setShowOrderBook(false)} />
+                      </DraggableWindow>)}
+                    
+                    {(showPositions || activeTab === 'positions') && (<DraggableWindow zIndex={zIndices.pos} onFocus={() => bringToFront('pos')} onClose={() => {setShowPositions(false); if(activeTab === 'positions') setActiveTab('dashboard');}} initialX={150} initialY={150}>
+                        <NetPositions 
+                            orders={orders} 
+                            marketData={marketDataRef || []} 
+                            onClose={() => setShowPositions(false)} 
+                            onBulkSquareOff={handleBulkSquareOff} 
+                        />
+                      </DraggableWindow>)}
+
+                    {showSnapQuote && liveSelectedData && (<DraggableWindow zIndex={zIndices.quote} onFocus={() => bringToFront('quote')} onClose={() => setShowSnapQuote(false)} initialX={400} initialY={100}>
+                        <SnapQuote symbolData={liveSelectedData} onClose={() => setShowSnapQuote(false)} onInitiateTrade={(mode) => { setOrderWindow({ mode, data: liveSelectedData }); bringToFront('order'); }} />
+                      </DraggableWindow>)}
+
+                    {showFunds && (<DraggableWindow zIndex={zIndices.funds} onFocus={() => bringToFront('funds')} onClose={() => setShowFunds(false)} initialX={500} initialY={200}>
+                        <Funds fundsData={funds} onClose={() => setShowFunds(false)} />
+                      </DraggableWindow>)}
+                </div>
+
+                {/* BOTTOM LOGS BAR (Optional - can be hidden or redesigned) */}
+                <div className="bg-white border-t border-gray-200 px-4 py-1 text-[10px] text-gray-500 flex justify-between">
+                     <span>System Logs: {logs.length > 0 ? logs[0].msg : "Ready"}</span>
+                     <span>v2.0.1 (PaperProp)</span>
+                </div>
+
+            </div>
         </div>
     );
   }
 
-  // --- RENDER (LOGGED OUT - LANDING PAGE) ---
+  // --- RENDER (LOGGED OUT - AUTH SCREEN) ---
   return (
-    <div className="w-screen h-screen bg-white flex flex-col overflow-hidden font-sans select-none">
-        {/* [REMOVED TOP MENU] - Full Screen Experience */}
-        
-        <div className="flex-1 relative flex items-center justify-center">
-            {step === 1 && (
-                <AuthScreen onLoginSuccess={(user, token) => {
-                    setCurrentUserId(user.username);
-                    setStep(2); 
-                }} />
-            )}
-
-            {step === 2 && (
-                <div className="z-50">
-                   <div className="bg-white w-[400px] h-[250px] shadow-2xl rounded-sm border border-gray-300 relative">
-                      <ScreenDownload onNext={() => setIsLoggedIn(true)} />
-                   </div>
-                </div>
-            )}
-            
-            {showRisk && <RiskModal onAgree={() => setIsLoggedIn(true)} />}
-        </div>
+    <div className="w-screen h-screen bg-white">
+        <AuthScreen onLoginSuccess={(user, token) => {
+            setCurrentUserId(user ? user.username : "TRADER"); // Fallback if backend doesn't send user object
+            setIsLoggedIn(true);
+        }} />
     </div>
   );
 }
