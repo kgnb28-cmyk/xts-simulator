@@ -399,7 +399,7 @@ export default function App() {
         {/* Main Login Area */}
         <div className="flex-1 relative flex items-center justify-center bg-[#f0f2f5]">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Svg.svg/2048px-Svg.svg.png')] bg-center bg-no-repeat bg-contain"></div>
+            <div className="absolute inset-0 pointer-events-none bg-white"></div>
             
             {/* [FIXED] DIRECTLY RENDER AUTH SCREEN (Clean Container) */}
             <div className="z-20">
