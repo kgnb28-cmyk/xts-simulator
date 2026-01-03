@@ -420,7 +420,7 @@ export default function App() {
                             orders={orders} 
                             marketData={marketDataRef || []} 
                             onClose={() => setShowPositions(false)} 
-                            onBulkSquareOff={handleBulkSquareOff} 
+                            onBulkSquareOff={handleBulkSquareOff} isTerminalMode={isTerminalMode}
                         />
                       </DraggableWindow>)}
 
