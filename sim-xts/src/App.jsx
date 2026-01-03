@@ -11,6 +11,7 @@ import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; 
 import AuthScreen from './AuthScreen';
 import OptionChain from './OptionChain'; 
+import TVChart from './TVChart'; // <--- 1. NEW IMPORT
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
@@ -390,14 +391,22 @@ export default function App() {
 
                 {/* DASHBOARD CONTENT */}
                 <div className={`flex-1 overflow-hidden relative p-4 ${isTerminalMode ? 'bg-[#121212]' : ''}`}>
+                    
+                    {/* --- 2. UPDATED DASHBOARD LAYOUT (Split View) --- */}
                     {activeTab === 'dashboard' && (
-                        <div className="h-full w-full flex flex-col gap-4">
-                             <div className={`flex-1 rounded-2xl shadow-sm overflow-hidden relative ${isTerminalMode ? 'border-none' : 'border border-gray-100 bg-white'}`}>
+                        <div className="h-full w-full flex gap-4">
+                             {/* LEFT: MARKET WATCH (30%) */}
+                             <div className={`w-[30%] rounded-2xl shadow-sm overflow-hidden relative ${isTerminalMode ? 'border-none' : 'border border-gray-100 bg-white'}`}>
                                  <MarketWatch 
                                     onSelectRow={(row) => setSelectedScript(row)} 
                                     onDataUpdate={(data) => setMarketDataRef(data)} 
                                     isTerminalMode={isTerminalMode} 
                                  />
+                             </div>
+
+                             {/* RIGHT: CHART (70%) */}
+                             <div className="flex-1 rounded-2xl overflow-hidden shadow-sm">
+                                 <TVChart isTerminalMode={isTerminalMode} />
                              </div>
                         </div>
                     )}
