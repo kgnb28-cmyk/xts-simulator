@@ -17,7 +17,10 @@ const API_URL = "https://xts-backend-api.onrender.com/api";
 
 export default function App() {
   const [step, setStep] = useState(1);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  
+  // [DEV MODE] Set to 'true' to BYPASS Login screen for UI work
+  const [isLoggedIn, setIsLoggedIn] = useState(true); 
+  
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("X14AD43"); 
