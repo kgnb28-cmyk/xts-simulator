@@ -408,7 +408,7 @@ export default function App() {
                       </DraggableWindow>)}
 
                     {modifyWindowData && (<DraggableWindow zIndex={zIndices.modify} onFocus={() => bringToFront('modify')} onClose={() => setModifyWindowData(null)} initialX={350} initialY={200}>
-                        <ModifyWindow order={modifyWindowData} availableFunds={funds.available} onClose={() => setModifyWindowData(null)} onConfirm={handleModifyConfirm} />
+                        <ModifyWindow order={modifyWindowData} availableFunds={funds.available} onClose={() => setModifyWindowData(null)} onConfirm={handleModifyConfirm} isTerminalMode={isTerminalMode} />
                       </DraggableWindow>)}
 
                     {(showOrderBook || activeTab === 'orders') && (<DraggableWindow zIndex={zIndices.book} onFocus={() => bringToFront('book')} onClose={() => {setShowOrderBook(false); if(activeTab === 'orders') setActiveTab('dashboard');}} initialX={100} initialY={400}>
