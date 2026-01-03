@@ -68,7 +68,6 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
     const interval = setInterval(() => {
       setWatchlist(prev => prev.map(item => {
         const move = (Math.random() - 0.5) * 1.5;
-        // Logic: Price UP = Blue, Price DOWN = Red
         const direction = move >= 0 ? 'up' : 'down'; 
         const newLtp = parseFloat((item.ltp + move).toFixed(2));
         
@@ -89,23 +88,27 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
     if(onDataUpdate) onDataUpdate(watchlist);
   }, [watchlist, onDataUpdate]);
 
-  // --- STYLES: MATCHING THE SCREENSHOT EXACTLY ---
+  // --- STYLES ---
   const styles = isTerminalMode ? {
       // TERMINAL MODE
       container: "bg-black text-white font-mono text-[11px] h-full border-r border-gray-800",
       header: "bg-[#d1d5db] text-black font-bold uppercase border-b border-gray-500 tracking-tight",
       row: "bg-black border-b border-gray-800 hover:bg-[#222] text-white cursor-pointer",
-      
       symbol: "text-yellow-400 font-bold",
       
-      // *** THE FIX: Solid Backgrounds for Bid (Purple) and Ask (Red) ***
-      bid: "bg-[#a855f7] text-white font-bold", // Purple BG (Buy Side)
-      ask: "bg-[#ef4444] text-white font-bold", // Red BG (Sell Side)
-      
-      // *** THE FIX: LTP is Black BG, but Text Changes Color ***
-      ltpUp: "text-[#3b82f6] font-bold", // Bright Blue Text
-      ltpDown: "text-[#ef4444] font-bold", // Bright Red Text
-      
+      // --- UPDATED: Dynamic Backgrounds for Ticks ---
+      bgTickUp: "bg-[#3b82f6] text-white font-bold", // Blue BG
+      bgTickDown: "bg-[#ef4444] text-white font-bold", // Red BG
+      bgStandard: "", // Standard Black BG
+
+      // --- UPDATED: Dynamic Text for LTP ---
+      textTickUp: "text-[#3b82f6] font-bold",
+      textTickDown: "text-[#ef4444] font-bold",
+
+      // --- UPDATED: Static Text for % Change ---
+      textGreen: "text-green-500 font-bold",
+      textRed: "text-red-500 font-bold",
+
       searchContainer: "bg-[#1a1a1a] border-b border-gray-700 p-1",
       searchInput: "bg-black border border-gray-600 text-yellow-400 placeholder:text-gray-600 h-8 text-xs focus:outline-none focus:border-yellow-500",
       dropdown: "bg-[#222] border-gray-600 text-white",
@@ -207,7 +210,13 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
 
       {/* ROWS */}
       <div className="flex-1 overflow-y-auto">
-        {watchlist.map((row) => (
+        {watchlist.map((row) => {
+          // --- UPDATED LOGIC: Determine dynamic background class based on tick direction ---
+          const dynamicBgClass = isTerminalMode 
+            ? (row.tickDir === 'up' ? styles.bgTickUp : styles.bgTickDown) 
+            : '';
+
+          return (
           <div 
             key={row.id} 
             onClick={() => onSelectRow(row)}
@@ -221,28 +230,28 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
                 </div>
             </div>
 
-            {/* LTP - Dynamic Text Color (Blue/Red), Black Background */}
-            <div className={`col-span-1 ${styles.cell} ${row.tickDir === 'up' ? styles.ltpUp : styles.ltpDown}`}>
+            {/* LTP - Black BG, Dynamic Text Color */}
+            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? (row.tickDir === 'up' ? styles.textTickUp : styles.textTickDown) : (row.change >= 0 ? styles.ltpUp : styles.ltpDown)}`}>
               {row.ltp.toFixed(2)}
             </div>
 
-            {/* BID QTY - Solid Background */}
-            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? styles.bid : ''}`}>
+            {/* BID QTY - Dynamic BG */}
+            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.bid}`}>
                 <span className={isTerminalMode ? "text-white" : styles.dimText}>{row.bidQty}</span>
             </div>
             
-            {/* BID PRICE - Solid Background */}
-            <div className={`col-span-1 ${styles.cell} ${styles.bid}`}>
+            {/* BID PRICE - Dynamic BG */}
+            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.bid}`}>
                 {row.bid.toFixed(2)}
             </div>
 
-            {/* ASK PRICE - Solid Background */}
-            <div className={`col-span-1 ${styles.cell} ${styles.ask}`}>
+            {/* ASK PRICE - Dynamic BG */}
+            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.ask}`}>
                 {row.ask.toFixed(2)}
             </div>
 
-            {/* ASK QTY - Solid Background */}
-            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? styles.ask : ''}`}>
+            {/* ASK QTY - Dynamic BG */}
+            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.ask}`}>
                 <span className={isTerminalMode ? "text-white" : styles.dimText}>{row.askQty}</span>
             </div>
 
@@ -250,13 +259,15 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
             <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>{row.vol}</div>
             <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>{row.oi}</div>
 
-            {/* CHANGE % - Standard Colors */}
+            {/* CHANGE % - Static Colors based on value, no flickering */}
             <div className={`col-span-1 ${styles.cell}`}>
                 {row.change >= 0 ? 
-                    <ArrowUp size={10} className={isTerminalMode ? "text-blue-500" : "text-green-600"} /> : 
-                    <ArrowDown size={10} className="text-red-500" />
+                    <ArrowUp size={10} className={isTerminalMode ? styles.textGreen : "text-green-600"} /> : 
+                    <ArrowDown size={10} className={isTerminalMode ? styles.textRed : "text-red-600"} />
                 }
-                <span className={`${row.change >= 0 ? (isTerminalMode ? 'text-blue-500' : 'text-green-600') : 'text-red-600'} font-bold ml-1`}>{row.change}%</span>
+                <span className={`${row.change >= 0 ? (isTerminalMode ? styles.textGreen : 'text-green-600') : (isTerminalMode ? styles.textRed : 'text-red-600')} ml-1`}>
+                    {row.change}%
+                </span>
             </div>
 
             {/* ACTIONS */}
@@ -266,7 +277,8 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
             </div>
 
           </div>
-        ))}
+        );
+        })}
       </div>
       
       {/* BOTTOM BAR */}
