@@ -125,7 +125,7 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
       dropdown: "bg-[#222] border-gray-600 text-white",
       dropdownHover: "bg-blue-900",
 
-      // Grid Cells
+      // Grid Cells (Added border-r for grid effect)
       cell: "border-r border-gray-800 px-2 py-1 truncate h-8 flex items-center justify-end",
       cellLeft: "border-r border-gray-800 px-2 py-1 truncate h-8 flex items-center justify-start",
       
