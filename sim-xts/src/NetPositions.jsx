@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { X, Zap } from 'lucide-react';
 
-const NetPositions = ({ orders, marketData, onClose, onBulkSquareOff }) => {
+const NetPositions = ({ orders, marketData, onClose, onBulkSquareOff, isTerminalMode }) => {
   const [selectedSymbols, setSelectedSymbols] = useState([]);
 
-  // --- 1. CONSOLIDATE TRADES ---
+  // --- 1. CONSOLIDATE TRADES (No Changes to Logic) ---
   const positions = {};
   orders.forEach(order => {
     if (order.status !== 'COMPLETE') return;
@@ -56,88 +56,134 @@ const NetPositions = ({ orders, marketData, onClose, onBulkSquareOff }) => {
   // --- 3. ROW SELECTION LOGIC ---
   const handleRowClick = (e, symbol) => {
     if (e.ctrlKey || e.metaKey) {
-        // Multi-select (Toggle)
         if (selectedSymbols.includes(symbol)) {
             setSelectedSymbols(prev => prev.filter(s => s !== symbol));
         } else {
             setSelectedSymbols(prev => [...prev, symbol]);
         }
     } else {
-        // Single select (Exclusive)
         setSelectedSymbols([symbol]);
     }
   };
 
-  // --- 4. PREPARE BULK DATA ---
   const handleExecuteSquareOff = () => {
-    // Filter out rows that are actually selected AND have open positions
     const positionsToClose = rows.filter(r => selectedSymbols.includes(r.symbol) && r.netQty !== 0);
     onBulkSquareOff(positionsToClose);
-    setSelectedSymbols([]); // Clear selection after action
+    setSelectedSymbols([]); 
+  };
+
+  // --- 4. DYNAMIC STYLES (The Surgical Edit) ---
+  const s = isTerminalMode ? {
+      // TERMINAL MODE
+      wrapper: "bg-black text-white font-mono text-[11px] h-full flex flex-col border border-gray-600 shadow-2xl",
+      windowHeader: "drag-handle bg-[#d1d5db] text-black font-bold uppercase border-b border-gray-500 tracking-tight flex justify-between items-center px-2 py-1 h-7 cursor-move",
+      closeBtn: "hover:bg-red-600 hover:text-white p-0.5 rounded transition-colors",
+      
+      tableContainer: "flex-1 overflow-auto bg-black custom-scrollbar",
+      tableHead: "sticky top-0 bg-[#333] text-yellow-400 font-bold border-b border-gray-600",
+      th: "border-r border-gray-700 px-2 py-1 text-right whitespace-nowrap",
+      
+      row: "border-b border-gray-800 hover:bg-[#222] cursor-pointer h-6 text-right",
+      rowSelected: "bg-blue-900/60 text-white",
+      
+      cell: "px-2 border-r border-gray-800 text-right",
+      cellSymbol: "px-2 border-r border-gray-800 text-left font-bold text-yellow-400",
+      
+      textProfit: "text-blue-400 font-bold", // Terminal uses Blue for Profit
+      textLoss: "text-red-500 font-bold",
+      
+      footer: "bg-[#222] border-t border-gray-600 text-white px-2 py-1 flex justify-between items-center h-8 font-bold font-mono"
+  } : {
+      // MODERN MODE (Original Styles Preserved)
+      wrapper: "bg-[#f0f0f0] shadow-2xl z-40 border border-gray-400 font-sans select-none text-xs flex flex-col h-full",
+      windowHeader: "drag-handle bg-gradient-to-r from-blue-900 to-blue-700 text-white flex justify-between items-center px-2 py-1 h-7 cursor-move",
+      closeBtn: "hover:bg-red-500 p-0.5 rounded",
+      
+      tableContainer: "flex-1 overflow-auto bg-white font-mono text-[11px]",
+      tableHead: "sticky top-0 bg-gradient-to-b from-[#f0f0f0] to-[#d4d4d4] text-black font-semibold",
+      th: "border-r border-b border-gray-400 px-2 py-1 text-right whitespace-nowrap",
+      
+      row: "border-b border-gray-200 cursor-pointer h-6 text-right hover:bg-blue-50 text-black",
+      rowSelected: "bg-blue-600 text-white",
+      
+      cell: "px-2 border-r border-gray-300",
+      cellSymbol: "px-2 border-r border-gray-300 text-left font-bold text-blue-800",
+      
+      textProfit: "text-green-600 font-bold",
+      textLoss: "text-red-600 font-bold",
+      
+      footer: "bg-[#fcfdfe] border-t border-gray-300 px-2 py-0.5 flex justify-between items-center h-8 font-bold font-mono"
   };
 
   return (
-    <div className="w-[1100px] h-[400px] bg-[#f0f0f0] shadow-2xl z-40 border border-gray-400 font-sans select-none text-xs flex flex-col">
+    <div className={s.wrapper}>
       
       {/* HEADER */}
-      <div className="drag-handle bg-gradient-to-r from-blue-900 to-blue-700 text-white flex justify-between items-center px-2 py-1 h-6 cursor-move">
-        <span className="font-bold pointer-events-none">Net Positions - X14AD43 [FINDOC]</span>
-        <button onClick={onClose} className="hover:bg-red-500 p-0.5 rounded"><X size={14}/></button>
+      <div className={s.windowHeader}>
+        <span className="pointer-events-none">Net Positions - X14AD43 [FINDOC]</span>
+        <button onClick={onClose} className={s.closeBtn}><X size={14}/></button>
       </div>
 
       {/* TABLE */}
-      <div className="flex-1 overflow-auto bg-white font-mono text-[11px]">
+      <div className={s.tableContainer}>
         <table className="w-full border-collapse">
-          <thead className="sticky top-0 bg-gradient-to-b from-[#f0f0f0] to-[#d4d4d4] text-black font-semibold">
+          <thead className={s.tableHead}>
             <tr>
               {['Account', 'Symbol', 'Net Qty', 'LTP', 'MtM', 'Buy Qty', 'Buy Avg', 'Sell Qty', 'Sell Avg', 'Net Val'].map(h => (
-                <th key={h} className="border-r border-b border-gray-400 px-2 py-1 text-right whitespace-nowrap">{h}</th>
+                <th key={h} className={s.th}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, idx) => {
               const isSelected = selectedSymbols.includes(row.symbol);
+              
+              // Helper for conditional styling
+              const mtmColor = row.mtm >= 0 ? s.textProfit : s.textLoss;
+              const netQtyColor = row.netQty > 0 ? s.textProfit : (row.netQty < 0 ? s.textLoss : 'opacity-50');
+
               return (
                 <tr 
                     key={idx} 
                     onClick={(e) => handleRowClick(e, row.symbol)}
-                    className={`border-b border-gray-200 cursor-pointer h-6 text-right
-                        ${isSelected ? 'bg-blue-600 text-white' : 'hover:bg-blue-50 text-black'}
-                    `}
+                    className={`${s.row} ${isSelected ? s.rowSelected : ''}`}
                 >
-                    <td className={`px-2 border-r border-gray-300 text-left ${isSelected ? 'border-blue-500' : ''}`}>{row.account}</td>
-                    <td className={`px-2 border-r border-gray-300 text-left font-bold ${!isSelected && 'text-blue-800'}`}>{row.symbol}</td>
+                    <td className={`${s.cell} text-left`}>{row.account}</td>
                     
-                    <td className={`px-2 border-r border-gray-300 font-bold ${!isSelected && (row.netQty > 0 ? 'text-blue-600' : (row.netQty < 0 ? 'text-red-600' : 'text-gray-400'))}`}>
+                    {/* Symbol needs specific handling for text color in Modern mode vs Terminal */}
+                    <td className={isTerminalMode ? s.cellSymbol : (isSelected ? 'px-2 border-r border-gray-300 text-left font-bold' : s.cellSymbol)}>
+                        {row.symbol}
+                    </td>
+                    
+                    <td className={`${s.cell} font-bold ${!isSelected ? netQtyColor : ''}`}>
                         {row.netQty}
                     </td>
                     
-                    <td className="px-2 border-r border-gray-300">{row.ltp.toFixed(2)}</td>
+                    <td className={s.cell}>{row.ltp.toFixed(2)}</td>
                     
-                    <td className={`px-2 border-r border-gray-300 font-bold ${!isSelected && (row.mtm >= 0 ? 'text-green-600' : 'text-red-600')}`}>
+                    <td className={`${s.cell} ${!isSelected ? mtmColor : ''}`}>
                         {row.mtm.toFixed(2)}
                     </td>
 
-                    <td className={`px-2 border-r border-gray-300 ${!isSelected && 'text-blue-600'}`}>{row.buyQty}</td>
-                    <td className="px-2 border-r border-gray-300">{row.buyAvg.toFixed(2)}</td>
-                    <td className={`px-2 border-r border-gray-300 ${!isSelected && 'text-red-600'}`}>{row.sellQty}</td>
-                    <td className="px-2 border-r border-gray-300">{row.sellAvg.toFixed(2)}</td>
-                    <td className="px-2 border-r border-gray-300">{(row.netQty * row.ltp).toFixed(2)}</td>
+                    <td className={`${s.cell} ${!isSelected && !isTerminalMode ? 'text-blue-600' : ''}`}>{row.buyQty}</td>
+                    <td className={s.cell}>{row.buyAvg.toFixed(2)}</td>
+                    <td className={`${s.cell} ${!isSelected && !isTerminalMode ? 'text-red-600' : ''}`}>{row.sellQty}</td>
+                    <td className={s.cell}>{row.sellAvg.toFixed(2)}</td>
+                    <td className={s.cell}>{(row.netQty * row.ltp).toFixed(2)}</td>
                 </tr>
               );
             })}
             {rows.length === 0 && (
-                <tr><td colSpan="10" className="text-center py-8 text-gray-400 italic">No open positions.</td></tr>
+                <tr><td colSpan="10" className="text-center py-8 opacity-50 italic">No open positions.</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
       {/* FOOTER TOTALS & ACTIONS */}
-      <div className="bg-[#fcfdfe] border-t border-gray-300 px-2 py-0.5 flex justify-between items-center h-8 font-bold font-mono">
+      <div className={s.footer}>
         <div className="flex gap-4 items-center">
-            <span>Total MTM: <span className={totalMtM >= 0 ? 'text-green-600' : 'text-red-600'}>{totalMtM.toFixed(2)}</span></span>
+            <span>Total MTM: <span className={totalMtM >= 0 ? s.textProfit : s.textLoss}>{totalMtM.toFixed(2)}</span></span>
         </div>
 
         {/* BULK ACTION BUTTON */}
