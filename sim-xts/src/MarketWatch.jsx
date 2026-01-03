@@ -16,7 +16,7 @@ const MASTER_SCRIPS = [
 
 const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
   
-  // Added 'tickDir' to track if the last move was Up or Down
+  // Watchlist State with Tick Direction
   const [watchlist, setWatchlist] = useState([
     { id: 1, symbol: 'NIFTY 24500 CE', ltp: 145.20, change: 12.5, bidQty: 500, bid: 145.10, ask: 145.25, askQty: 1200, vol: '1.2M', oi: '45L', tickDir: 'up' },
     { id: 2, symbol: 'BANKNIFTY FUT', ltp: 48200.00, change: -150.00, bidQty: 25, bid: 48198.00, ask: 48202.00, askQty: 50, vol: '500K', oi: '12L', tickDir: 'down' },
@@ -28,7 +28,7 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef(null);
 
-  // SEARCH LOGIC
+  // SMART SEARCH LOGIC
   useEffect(() => {
     if (searchTerm.length < 2) { setSearchResults([]); return; }
     const filtered = MASTER_SCRIPS.filter(scrip => scrip.symbol.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5); 
@@ -48,22 +48,33 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
     setIsSearchOpen(false);
   };
 
-  // --- SIMULATION ENGINE (With Tick Logic) ---
+  // --- RESTORED MISSING FUNCTION ---
+  const handleKeyDown = (e) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev + 1) % searchResults.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev - 1 + searchResults.length) % searchResults.length);
+    } else if (e.key === 'Enter' && searchResults.length > 0) {
+      addToWatchlist(searchResults[selectedIndex]);
+    } else if (e.key === 'Escape') {
+      setSearchTerm('');
+      setIsSearchOpen(false);
+    }
+  };
+
+  // --- SIMULATION ENGINE ---
   useEffect(() => {
     const interval = setInterval(() => {
       setWatchlist(prev => prev.map(item => {
-        // 1. Calculate random move
         const move = (Math.random() - 0.5) * 1.5;
-        
-        // 2. Determine Direction (Up/Down) based on this specific move
-        const direction = move >= 0 ? 'up' : 'down';
-
+        const direction = move >= 0 ? 'up' : 'down'; // Track tick direction
         const newLtp = parseFloat((item.ltp + move).toFixed(2));
-        
         return { 
             ...item, 
             ltp: newLtp, 
-            tickDir: direction, // Store direction for color logic
+            tickDir: direction, 
             bid: parseFloat((newLtp - 0.05).toFixed(2)),
             ask: parseFloat((newLtp + 0.05).toFixed(2)),
             change: parseFloat((move * 10).toFixed(2)) 
@@ -77,9 +88,8 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
     if(onDataUpdate) onDataUpdate(watchlist);
   }, [watchlist, onDataUpdate]);
 
-  // --- STYLES ---
+  // --- STYLES (Terminal vs Modern) ---
   const styles = isTerminalMode ? {
-      // TERMINAL MODE
       container: "bg-black text-white font-mono text-[11px] h-full border-r border-gray-800",
       header: "bg-[#d1d5db] text-black font-bold uppercase border-b border-gray-500 tracking-tight",
       row: "bg-black border-b border-gray-800 hover:bg-[#222] text-white cursor-pointer",
@@ -87,10 +97,8 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
       symbol: "text-yellow-400 font-bold",
       bid: "bg-[#9333ea] text-white font-bold",
       ask: "bg-[#dc2626] text-white font-bold",
-      
-      // *** FIXED LOGIC: Blue for Up Tick, Red for Down Tick ***
-      ltpUp: "text-blue-400 font-bold", 
-      ltpDown: "text-red-500 font-bold",
+      ltpUp: "text-blue-400 font-bold", // Tick Up = Blue
+      ltpDown: "text-red-500 font-bold", // Tick Down = Red
       
       searchContainer: "bg-[#1a1a1a] border-b border-gray-700 p-1",
       searchInput: "bg-black border border-gray-600 text-yellow-400 placeholder:text-gray-600 h-8 text-xs focus:outline-none focus:border-yellow-500",
@@ -105,7 +113,6 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
       btnBuy: "bg-blue-700 text-white border border-blue-500 hover:bg-blue-600",
       btnSell: "bg-red-700 text-white border border-red-500 hover:bg-red-600"
   } : {
-      // MODERN MODE
       container: "bg-white text-gray-800 font-sans text-xs h-full",
       header: "bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider",
       row: "bg-white border-b border-gray-100 hover:bg-indigo-50/50 text-gray-800 cursor-pointer",
