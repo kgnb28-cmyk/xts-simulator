@@ -412,7 +412,7 @@ export default function App() {
                       </DraggableWindow>)}
 
                     {(showOrderBook || activeTab === 'orders') && (<DraggableWindow zIndex={zIndices.book} onFocus={() => bringToFront('book')} onClose={() => {setShowOrderBook(false); if(activeTab === 'orders') setActiveTab('dashboard');}} initialX={100} initialY={400}>
-                        <OrderBook orders={orders} selectedOrderId={selectedOrderId} onSelectRow={setSelectedOrderId} onClose={() => setShowOrderBook(false)} />
+                        <OrderBook orders={orders} selectedOrderId={selectedOrderId} onSelectRow={setSelectedOrderId} onClose={() => setShowOrderBook(false)} isTerminalMode={isTerminalMode} />
                       </DraggableWindow>)}
                     
                     {(showPositions || activeTab === 'positions') && (<DraggableWindow zIndex={zIndices.pos} onFocus={() => bringToFront('pos')} onClose={() => {setShowPositions(false); if(activeTab === 'positions') setActiveTab('dashboard');}} initialX={150} initialY={150}>
