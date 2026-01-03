@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor } from 'lucide-react'; 
+import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor, Table } from 'lucide-react'; // Added 'Table' icon
 import MarketWatch from './MarketWatch';
 import OrderWindow from './OrderWindow';
 import OrderBook from './OrderBook';
@@ -10,6 +10,7 @@ import Funds from './Funds';
 import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; 
 import AuthScreen from './AuthScreen';
+import OptionChain from './OptionChain'; // <--- 1. IMPORT OPTION CHAIN
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
@@ -20,13 +21,13 @@ export default function App() {
   
   // [DEV MODE] Set to 'true' to BYPASS Login screen for UI work
   const [isLoggedIn, setIsLoggedIn] = useState(true); 
-  const [isTerminalMode, setIsTerminalMode] = useState(false); // <--- NEW TOGGLE STATE
+  const [isTerminalMode, setIsTerminalMode] = useState(false); 
   
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("X14AD43"); 
   const [showAdmin, setShowAdmin] = useState(false); 
-  const [activeTab, setActiveTab] = useState('dashboard'); // New State for Sidebar Navigation
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   // WINDOW STATES
   const [selectedScript, setSelectedScript] = useState(null); 
@@ -35,6 +36,7 @@ export default function App() {
   const [showPositions, setShowPositions] = useState(false); 
   const [showSnapQuote, setShowSnapQuote] = useState(false);
   const [showFunds, setShowFunds] = useState(false); 
+  const [showOptionChain, setShowOptionChain] = useState(false); // <--- 2. NEW STATE
   const [modifyWindowData, setModifyWindowData] = useState(null);
   
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -45,7 +47,7 @@ export default function App() {
   const [logs, setLogs] = useState([]);
 
   const [marketDataRef, setMarketDataRef] = useState([]); 
-  const [zIndices, setZIndices] = useState({ order: 10, book: 10, pos: 10, quote: 10, funds: 10, modify: 10 });
+  const [zIndices, setZIndices] = useState({ order: 10, book: 10, pos: 10, quote: 10, funds: 10, modify: 10, chain: 10 }); // Added 'chain'
   
   const bringToFront = (key) => {
     const highest = Math.max(...Object.values(zIndices));
@@ -305,13 +307,17 @@ export default function App() {
                     <nav className="space-y-2">
                         {[
                             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                            { id: 'chain', label: 'Option Chain', icon: Table }, // <--- 3. ADDED SIDEBAR ITEM
                             { id: 'positions', label: 'Positions', icon: PieChart },
                             { id: 'orders', label: 'Orders', icon: LineChart },
                             { id: 'settings', label: 'Settings', icon: Settings },
                         ].map(item => (
                             <button 
                                 key={item.id}
-                                onClick={() => setActiveTab(item.id)}
+                                onClick={() => {
+                                    if(item.id === 'chain') { setShowOptionChain(true); bringToFront('chain'); } // Handle Click
+                                    else setActiveTab(item.id);
+                                }}
                                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                                     activeTab === item.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-500 hover:bg-gray-50'
                                 }`}
@@ -378,23 +384,20 @@ export default function App() {
                 </div>
 
                 {/* DASHBOARD CONTENT */}
-                {/* Dynamically applying Dark BG if Terminal Mode is ON */}
                 <div className={`flex-1 overflow-hidden relative p-4 ${isTerminalMode ? 'bg-[#121212]' : ''}`}>
-                    {/* Render MarketWatch and Windows ONLY if on Dashboard tab */}
                     {activeTab === 'dashboard' && (
                         <div className="h-full w-full flex flex-col gap-4">
-                             {/* MarketWatch Container - Needs to handle borders based on mode */}
                              <div className={`flex-1 rounded-2xl shadow-sm overflow-hidden relative ${isTerminalMode ? 'border-none' : 'border border-gray-100 bg-white'}`}>
                                  <MarketWatch 
                                     onSelectRow={(row) => setSelectedScript(row)} 
                                     onDataUpdate={(data) => setMarketDataRef(data)} 
-                                    isTerminalMode={isTerminalMode} // <--- PASSING THE PROP
+                                    isTerminalMode={isTerminalMode} 
                                  />
                              </div>
                         </div>
                     )}
 
-                    {/* FLOATING WINDOWS (Always available regardless of tab for now, or you can restrict them) */}
+                    {/* FLOATING WINDOWS */}
                     {orderWindow && (<DraggableWindow zIndex={zIndices.order} onFocus={() => bringToFront('order')} onClose={() => setOrderWindow(null)} initialX={300} initialY={150}>
                         <OrderWindow mode={orderWindow.mode} symbolData={orderWindow.data} availableFunds={funds.available} onClose={() => setOrderWindow(null)} onSubmit={handleOrderSubmit} />
                       </DraggableWindow>)}
@@ -403,7 +406,6 @@ export default function App() {
                         <ModifyWindow order={modifyWindowData} availableFunds={funds.available} onClose={() => setModifyWindowData(null)} onConfirm={handleModifyConfirm} />
                       </DraggableWindow>)}
 
-                    {/* Toggle these windows via Sidebar buttons later if you want, but Hotkeys still work */}
                     {(showOrderBook || activeTab === 'orders') && (<DraggableWindow zIndex={zIndices.book} onFocus={() => bringToFront('book')} onClose={() => {setShowOrderBook(false); if(activeTab === 'orders') setActiveTab('dashboard');}} initialX={100} initialY={400}>
                         <OrderBook orders={orders} selectedOrderId={selectedOrderId} onSelectRow={setSelectedOrderId} onClose={() => setShowOrderBook(false)} />
                       </DraggableWindow>)}
@@ -424,9 +426,16 @@ export default function App() {
                     {showFunds && (<DraggableWindow zIndex={zIndices.funds} onFocus={() => bringToFront('funds')} onClose={() => setShowFunds(false)} initialX={500} initialY={200}>
                         <Funds fundsData={funds} onClose={() => setShowFunds(false)} />
                       </DraggableWindow>)}
+
+                    {/* <--- 4. OPTION CHAIN WINDOW ---> */}
+                    {showOptionChain && (<DraggableWindow zIndex={zIndices.chain} onFocus={() => bringToFront('chain')} onClose={() => setShowOptionChain(false)} initialX={100} initialY={100} title="OPTION CHAIN">
+                        <div style={{width: '900px', height: '600px'}}>
+                           <OptionChain spotPrice={24550} isTerminalMode={isTerminalMode} />
+                        </div>
+                      </DraggableWindow>)}
+
                 </div>
 
-                {/* BOTTOM LOGS BAR (Optional - can be hidden or redesigned) */}
                 <div className="bg-white border-t border-gray-200 px-4 py-1 text-[10px] text-gray-500 flex justify-between">
                      <span>System Logs: {logs.length > 0 ? logs[0].msg : "Ready"}</span>
                      <span>v2.0.1 (PaperProp)</span>
@@ -437,11 +446,10 @@ export default function App() {
     );
   }
 
-  // --- RENDER (LOGGED OUT - AUTH SCREEN) ---
   return (
     <div className="w-screen h-screen bg-white">
         <AuthScreen onLoginSuccess={(user, token) => {
-            setCurrentUserId(user ? user.username : "TRADER"); // Fallback if backend doesn't send user object
+            setCurrentUserId(user ? user.username : "TRADER"); 
             setIsLoggedIn(true);
         }} />
     </div>
