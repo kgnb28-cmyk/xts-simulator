@@ -16,9 +16,10 @@ const MASTER_SCRIPS = [
 
 const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
   
+  // Added 'tickDir' to track if the last move was Up or Down
   const [watchlist, setWatchlist] = useState([
-    { id: 1, symbol: 'NIFTY 24500 CE', ltp: 145.20, change: 12.5, bidQty: 500, bid: 145.10, ask: 145.25, askQty: 1200, vol: '1.2M', oi: '45L' },
-    { id: 2, symbol: 'BANKNIFTY FUT', ltp: 48200.00, change: -150.00, bidQty: 25, bid: 48198.00, ask: 48202.00, askQty: 50, vol: '500K', oi: '12L' },
+    { id: 1, symbol: 'NIFTY 24500 CE', ltp: 145.20, change: 12.5, bidQty: 500, bid: 145.10, ask: 145.25, askQty: 1200, vol: '1.2M', oi: '45L', tickDir: 'up' },
+    { id: 2, symbol: 'BANKNIFTY FUT', ltp: 48200.00, change: -150.00, bidQty: 25, bid: 48198.00, ask: 48202.00, askQty: 50, vol: '500K', oi: '12L', tickDir: 'down' },
   ]);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,67 +28,42 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef(null);
 
-  // SMART SEARCH LOGIC
+  // SEARCH LOGIC
   useEffect(() => {
-    if (searchTerm.length < 2) {
-      setSearchResults([]);
-      return;
-    }
-    const filtered = MASTER_SCRIPS.filter(scrip => 
-      scrip.symbol.toLowerCase().includes(searchTerm.toLowerCase())
-    ).slice(0, 5); 
+    if (searchTerm.length < 2) { setSearchResults([]); return; }
+    const filtered = MASTER_SCRIPS.filter(scrip => scrip.symbol.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5); 
     setSearchResults(filtered);
     setSelectedIndex(0);
   }, [searchTerm]);
 
-  // KEYBOARD NAVIGATION
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % searchResults.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + searchResults.length) % searchResults.length);
-    } else if (e.key === 'Enter' && searchResults.length > 0) {
-      addToWatchlist(searchResults[selectedIndex]);
-    } else if (e.key === 'Escape') {
-      setSearchTerm('');
-      setIsSearchOpen(false);
-    }
-  };
-
   const addToWatchlist = (scrip) => {
-    if (watchlist.some(item => item.symbol === scrip.symbol)) {
-        setSearchTerm('');
-        setIsSearchOpen(false);
-        return;
-    }
+    if (watchlist.some(item => item.symbol === scrip.symbol)) { setSearchTerm(''); setIsSearchOpen(false); return; }
     const newRow = {
-        id: Date.now(),
-        symbol: scrip.symbol,
-        ltp: scrip.ltp,
-        change: 0.00,
-        bidQty: scrip.lotSize * 5,
-        bid: scrip.ltp - 0.05,
-        ask: scrip.ltp + 0.05,
-        askQty: scrip.lotSize * 2,
-        vol: '0',
-        oi: '-'
+        id: Date.now(), symbol: scrip.symbol, ltp: scrip.ltp, change: 0.00, 
+        bidQty: scrip.lotSize * 5, bid: scrip.ltp - 0.05, ask: scrip.ltp + 0.05, askQty: scrip.lotSize * 2, 
+        vol: '0', oi: '-', tickDir: 'up'
     };
     setWatchlist(prev => [newRow, ...prev]);
     setSearchTerm('');
     setIsSearchOpen(false);
   };
 
-  // SIMULATION ENGINE
+  // --- SIMULATION ENGINE (With Tick Logic) ---
   useEffect(() => {
     const interval = setInterval(() => {
       setWatchlist(prev => prev.map(item => {
+        // 1. Calculate random move
         const move = (Math.random() - 0.5) * 1.5;
+        
+        // 2. Determine Direction (Up/Down) based on this specific move
+        const direction = move >= 0 ? 'up' : 'down';
+
         const newLtp = parseFloat((item.ltp + move).toFixed(2));
+        
         return { 
             ...item, 
-            ltp: newLtp,
+            ltp: newLtp, 
+            tickDir: direction, // Store direction for color logic
             bid: parseFloat((newLtp - 0.05).toFixed(2)),
             ask: parseFloat((newLtp + 0.05).toFixed(2)),
             change: parseFloat((move * 10).toFixed(2)) 
@@ -101,31 +77,26 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
     if(onDataUpdate) onDataUpdate(watchlist);
   }, [watchlist, onDataUpdate]);
 
-  // --- 2. DYNAMIC STYLING SYSTEM (The True "Terminal Mode") ---
+  // --- STYLES ---
   const styles = isTerminalMode ? {
-      // TERMINAL MODE (High Contrast / Matrix / ODIN Style)
+      // TERMINAL MODE
       container: "bg-black text-white font-mono text-[11px] h-full border-r border-gray-800",
-      
-      // Header: Silver Background, Black Text, Sharp Borders
       header: "bg-[#d1d5db] text-black font-bold uppercase border-b border-gray-500 tracking-tight",
-      
-      // Rows: Black BG, White Text, Grid Lines
       row: "bg-black border-b border-gray-800 hover:bg-[#222] text-white cursor-pointer",
       
-      // Specific Columns
-      symbol: "text-yellow-400 font-bold", // Yellow Symbol
-      bid: "bg-[#9333ea] text-white font-bold", // Purple Bid BG
-      ask: "bg-[#dc2626] text-white font-bold", // Red Ask BG
-      ltpUp: "text-green-400 font-bold",
+      symbol: "text-yellow-400 font-bold",
+      bid: "bg-[#9333ea] text-white font-bold",
+      ask: "bg-[#dc2626] text-white font-bold",
+      
+      // *** FIXED LOGIC: Blue for Up Tick, Red for Down Tick ***
+      ltpUp: "text-blue-400 font-bold", 
       ltpDown: "text-red-500 font-bold",
       
-      // Search Bar
       searchContainer: "bg-[#1a1a1a] border-b border-gray-700 p-1",
       searchInput: "bg-black border border-gray-600 text-yellow-400 placeholder:text-gray-600 h-8 text-xs focus:outline-none focus:border-yellow-500",
       dropdown: "bg-[#222] border-gray-600 text-white",
       dropdownHover: "bg-blue-900",
 
-      // Grid Cells (Added border-r for grid effect)
       cell: "border-r border-gray-800 px-2 py-1 truncate h-8 flex items-center justify-end",
       cellLeft: "border-r border-gray-800 px-2 py-1 truncate h-8 flex items-center justify-start",
       
@@ -134,7 +105,7 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
       btnBuy: "bg-blue-700 text-white border border-blue-500 hover:bg-blue-600",
       btnSell: "bg-red-700 text-white border border-red-500 hover:bg-red-600"
   } : {
-      // MODERN MODE (Clean/White/Airy)
+      // MODERN MODE
       container: "bg-white text-gray-800 font-sans text-xs h-full",
       header: "bg-gray-50 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider",
       row: "bg-white border-b border-gray-100 hover:bg-indigo-50/50 text-gray-800 cursor-pointer",
@@ -162,7 +133,7 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
   return (
     <div className={`flex flex-col h-full relative transition-colors duration-200 ${styles.container}`}>
       
-      {/* --- SEARCH BAR --- */}
+      {/* SEARCH BAR */}
       <div className={`sticky top-0 z-30 ${styles.searchContainer}`}>
         <div className="relative">
             <Search className={`absolute left-2 top-2.5 ${styles.dimText}`} size={14} />
@@ -206,24 +177,21 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
         </div>
       </div>
 
-      {/* --- WATCHLIST HEADER --- */}
+      {/* HEADER */}
       <div className={`grid grid-cols-12 z-20 sticky top-0 ${styles.header}`}>
         <div className={`col-span-3 ${styles.cellLeft}`}>Script</div>
         <div className={`col-span-1 ${styles.cell}`}>LTP</div>
-        
-        {/* The "Terminal Style" Columns */}
         <div className={`col-span-1 ${styles.cell}`}>Bid Qty</div>
         <div className={`col-span-1 ${styles.cell}`}>Bid</div>
         <div className={`col-span-1 ${styles.cell}`}>Ask</div>
         <div className={`col-span-1 ${styles.cell}`}>Ask Qty</div>
-        
         <div className={`col-span-1 hidden lg:flex ${styles.cell}`}>Vol</div>
         <div className={`col-span-1 hidden lg:flex ${styles.cell}`}>OI</div>
         <div className={`col-span-1 ${styles.cell}`}>% Chg</div>
         <div className={`col-span-1 ${styles.cell} justify-center`}>Action</div>
       </div>
 
-      {/* --- WATCHLIST ROWS --- */}
+      {/* ROWS */}
       <div className="flex-1 overflow-y-auto">
         {watchlist.map((row) => (
           <div 
@@ -231,18 +199,16 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
             onClick={() => onSelectRow(row)}
             className={`group grid grid-cols-12 transition-colors items-center ${styles.row}`}
           >
-            {/* Symbol Name */}
+            {/* Symbol */}
             <div className={`col-span-3 ${styles.cellLeft}`}>
                 <div className="flex flex-col justify-center">
                     <span className={styles.symbol}>{row.symbol}</span>
-                    <span className={`text-[9px] flex items-center gap-1 ${styles.dimText}`}>
-                       NSE FO
-                    </span>
+                    <span className={`text-[9px] flex items-center gap-1 ${styles.dimText}`}>NSE FO</span>
                 </div>
             </div>
 
-            {/* LTP */}
-            <div className={`col-span-1 ${styles.cell} ${row.change >= 0 ? styles.ltpUp : styles.ltpDown}`}>
+            {/* LTP - Uses tickDir to decide Blue vs Red */}
+            <div className={`col-span-1 ${styles.cell} ${row.tickDir === 'up' ? styles.ltpUp : styles.ltpDown}`}>
               {row.ltp.toFixed(2)}
             </div>
 
@@ -266,26 +232,20 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
                 <span className={isTerminalMode ? "text-white" : styles.dimText}>{row.askQty}</span>
             </div>
 
-            {/* VOLUME */}
-            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>
-                {row.vol}
-            </div>
+            {/* VOL & OI */}
+            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>{row.vol}</div>
+            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>{row.oi}</div>
 
-            {/* OI */}
-            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>
-                {row.oi}
-            </div>
-
-            {/* CHANGE % */}
+            {/* CHANGE % - Uses standard Green/Red for Day's trend */}
             <div className={`col-span-1 ${styles.cell}`}>
                 {row.change >= 0 ? 
-                    <ArrowUp size={10} className={isTerminalMode ? "text-green-400" : "text-green-600"} /> : 
-                    <ArrowDown size={10} className="text-red-600" />
+                    <ArrowUp size={10} className={isTerminalMode ? "text-blue-400" : "text-green-600"} /> : 
+                    <ArrowDown size={10} className="text-red-500" />
                 }
-                <span className={`${row.change >= 0 ? (isTerminalMode ? 'text-green-400' : 'text-green-600') : 'text-red-600'} font-bold ml-1`}>{row.change}%</span>
+                <span className={`${row.change >= 0 ? (isTerminalMode ? 'text-blue-400' : 'text-green-600') : 'text-red-600'} font-bold ml-1`}>{row.change}%</span>
             </div>
 
-            {/* ACTION BUTTONS */}
+            {/* ACTIONS */}
             <div className={`col-span-1 flex justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ${styles.cell} border-none`}>
                 <button className={`w-5 h-5 rounded flex items-center justify-center font-bold text-[9px] ${styles.btnBuy}`}>B</button>
                 <button className={`w-5 h-5 rounded flex items-center justify-center font-bold text-[9px] ${styles.btnSell}`}>S</button>
