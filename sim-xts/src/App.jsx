@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor, Table } from 'lucide-react'; // Added 'Table' icon
+import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor, Table } from 'lucide-react'; 
 import MarketWatch from './MarketWatch';
 import OrderWindow from './OrderWindow';
 import OrderBook from './OrderBook';
@@ -10,7 +10,7 @@ import Funds from './Funds';
 import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; 
 import AuthScreen from './AuthScreen';
-import OptionChain from './OptionChain'; // <--- 1. IMPORT OPTION CHAIN
+import OptionChain from './OptionChain'; 
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
@@ -36,7 +36,7 @@ export default function App() {
   const [showPositions, setShowPositions] = useState(false); 
   const [showSnapQuote, setShowSnapQuote] = useState(false);
   const [showFunds, setShowFunds] = useState(false); 
-  const [showOptionChain, setShowOptionChain] = useState(false); // <--- 2. NEW STATE
+  const [showOptionChain, setShowOptionChain] = useState(false); 
   const [modifyWindowData, setModifyWindowData] = useState(null);
   
   const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -47,7 +47,7 @@ export default function App() {
   const [logs, setLogs] = useState([]);
 
   const [marketDataRef, setMarketDataRef] = useState([]); 
-  const [zIndices, setZIndices] = useState({ order: 10, book: 10, pos: 10, quote: 10, funds: 10, modify: 10, chain: 10 }); // Added 'chain'
+  const [zIndices, setZIndices] = useState({ order: 10, book: 10, pos: 10, quote: 10, funds: 10, modify: 10, chain: 10 }); 
   
   const bringToFront = (key) => {
     const highest = Math.max(...Object.values(zIndices));
@@ -307,7 +307,7 @@ export default function App() {
                     <nav className="space-y-2">
                         {[
                             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                            { id: 'chain', label: 'Option Chain', icon: Table }, // <--- 3. ADDED SIDEBAR ITEM
+                            { id: 'chain', label: 'Option Chain', icon: Table }, 
                             { id: 'positions', label: 'Positions', icon: PieChart },
                             { id: 'orders', label: 'Orders', icon: LineChart },
                             { id: 'settings', label: 'Settings', icon: Settings },
@@ -315,7 +315,7 @@ export default function App() {
                             <button 
                                 key={item.id}
                                 onClick={() => {
-                                    if(item.id === 'chain') { setShowOptionChain(true); bringToFront('chain'); } // Handle Click
+                                    if(item.id === 'chain') { setShowOptionChain(true); bringToFront('chain'); } 
                                     else setActiveTab(item.id);
                                 }}
                                 className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
@@ -352,17 +352,22 @@ export default function App() {
 
                     <div className="flex items-center gap-6">
 
-                        {/* TERMINAL MODE TOGGLE */}
-                        <div 
-                            onClick={() => setIsTerminalMode(!isTerminalMode)}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all border ${
-                                isTerminalMode 
-                                ? 'bg-black text-green-400 border-green-900 shadow-[0_0_10px_rgba(74,222,128,0.3)]' 
-                                : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
-                            }`}
-                        >
-                            <Monitor size={14} />
-                            {isTerminalMode ? 'TERMINAL' : 'MODERN'}
+                        {/* TERMINAL MODE TOGGLE - SWITCH */}
+                        <div className="flex items-center gap-2">
+                            <span className={`text-xs font-bold ${isTerminalMode ? 'text-gray-400' : 'text-gray-700'}`}>MODERN</span>
+                            <div 
+                                onClick={() => setIsTerminalMode(!isTerminalMode)}
+                                className={`w-12 h-6 rounded-full p-1 relative cursor-pointer transition-colors duration-300 ${
+                                    isTerminalMode ? 'bg-blue-600' : 'bg-gray-300'
+                                }`}
+                            >
+                                <div 
+                                    className={`w-4 h-4 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${
+                                        isTerminalMode ? 'left-7' : 'left-1'
+                                    }`}
+                                ></div>
+                            </div>
+                            <span className={`text-xs font-bold ${isTerminalMode ? 'text-green-400' : 'text-gray-400'}`}>TERMINAL</span>
                         </div>
 
                         {/* Status Indicator */}
@@ -428,9 +433,13 @@ export default function App() {
                       </DraggableWindow>)}
 
                     {/* <--- 4. OPTION CHAIN WINDOW ---> */}
-                    {showOptionChain && (<DraggableWindow zIndex={zIndices.chain} onFocus={() => bringToFront('chain')} onClose={() => setShowOptionChain(false)} initialX={100} initialY={100} title="OPTION CHAIN">
+                    {showOptionChain && (<DraggableWindow zIndex={zIndices.chain} onFocus={() => bringToFront('chain')} onClose={() => setShowOptionChain(false)} initialX={100} initialY={100}>
                         <div style={{width: '900px', height: '600px'}}>
-                           <OptionChain spotPrice={24550} isTerminalMode={isTerminalMode} />
+                           <OptionChain 
+                                spotPrice={24550} 
+                                isTerminalMode={isTerminalMode} 
+                                onClose={() => setShowOptionChain(false)} 
+                           />
                         </div>
                       </DraggableWindow>)}
 
