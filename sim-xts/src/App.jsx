@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User } from 'lucide-react'; 
+import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor } from 'lucide-react'; 
 import MarketWatch from './MarketWatch';
 import OrderWindow from './OrderWindow';
 import OrderBook from './OrderBook';
@@ -20,6 +20,7 @@ export default function App() {
   
   // [DEV MODE] Set to 'true' to BYPASS Login screen for UI work
   const [isLoggedIn, setIsLoggedIn] = useState(true); 
+  const [isTerminalMode, setIsTerminalMode] = useState(false); // <--- NEW TOGGLE STATE
   
   const [isLoadingData, setIsLoadingData] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
@@ -344,6 +345,20 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-6">
+
+                        {/* TERMINAL MODE TOGGLE */}
+                        <div 
+                            onClick={() => setIsTerminalMode(!isTerminalMode)}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold cursor-pointer transition-all border ${
+                                isTerminalMode 
+                                ? 'bg-black text-green-400 border-green-900 shadow-[0_0_10px_rgba(74,222,128,0.3)]' 
+                                : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                            }`}
+                        >
+                            <Monitor size={14} />
+                            {isTerminalMode ? 'TERMINAL' : 'MODERN'}
+                        </div>
+
                         {/* Status Indicator */}
                         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${isOffline ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
                             {isOffline ? <WifiOff size={14} /> : <Wifi size={14} />}
@@ -362,14 +377,19 @@ export default function App() {
                     </div>
                 </div>
 
-                {/* DASHBOARD CONTENT (Old Terminal Logic Wrapped Here) */}
-                <div className="flex-1 overflow-hidden relative p-4">
+                {/* DASHBOARD CONTENT */}
+                {/* Dynamically applying Dark BG if Terminal Mode is ON */}
+                <div className={`flex-1 overflow-hidden relative p-4 ${isTerminalMode ? 'bg-[#121212]' : ''}`}>
                     {/* Render MarketWatch and Windows ONLY if on Dashboard tab */}
                     {activeTab === 'dashboard' && (
                         <div className="h-full w-full flex flex-col gap-4">
-                             {/* MarketWatch takes full height now */}
-                             <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden relative">
-                                 <MarketWatch onSelectRow={(row) => setSelectedScript(row)} onDataUpdate={(data) => setMarketDataRef(data)} />
+                             {/* MarketWatch Container - Needs to handle borders based on mode */}
+                             <div className={`flex-1 rounded-2xl shadow-sm overflow-hidden relative ${isTerminalMode ? 'border-none' : 'border border-gray-100 bg-white'}`}>
+                                 <MarketWatch 
+                                    onSelectRow={(row) => setSelectedScript(row)} 
+                                    onDataUpdate={(data) => setMarketDataRef(data)} 
+                                    isTerminalMode={isTerminalMode} // <--- PASSING THE PROP
+                                 />
                              </div>
                         </div>
                     )}
