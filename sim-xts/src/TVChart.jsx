@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries } from 'lightweight-charts'; // <--- UPDATED IMPORT
 import { Maximize, Minimize } from 'lucide-react';
 
 const TVChart = ({ isTerminalMode }) => {
@@ -7,6 +7,8 @@ const TVChart = ({ isTerminalMode }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
+    if (!chartContainerRef.current) return;
+
     // 1. SETUP CHART
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -20,7 +22,7 @@ const TVChart = ({ isTerminalMode }) => {
         horzLines: { color: isTerminalMode ? '#333' : '#f0f0f0' },
       },
       crosshair: {
-        mode: 1, // Crosshair Mode
+        mode: 1, 
       },
       timeScale: {
         timeVisible: true,
@@ -28,8 +30,10 @@ const TVChart = ({ isTerminalMode }) => {
       },
     });
 
-    // 2. ADD CANDLESTICK SERIES
-    const candleSeries = chart.addCandlestickSeries({
+    // 2. ADD CANDLESTICK SERIES (UPDATED FOR V5)
+    // Old V4: chart.addCandlestickSeries(...) -> ERROR
+    // New V5: chart.addSeries(CandlestickSeries, ...) -> CORRECT
+    const candleSeries = chart.addSeries(CandlestickSeries, { 
       upColor: '#26a69a',
       downColor: '#ef5350',
       borderVisible: false,
@@ -39,7 +43,7 @@ const TVChart = ({ isTerminalMode }) => {
 
     // 3. GENERATE HISTORICAL DATA (Last 100 Candles)
     let data = [];
-    let time = Math.floor(Date.now() / 1000) - 6000; // Start 100 mins ago
+    let time = Math.floor(Date.now() / 1000) - 6000; 
     let lastClose = 24500;
 
     for (let i = 0; i < 100; i++) {
@@ -54,12 +58,10 @@ const TVChart = ({ isTerminalMode }) => {
     candleSeries.setData(data);
 
     // 4. LIVE TICK SIMULATION
-    // This creates a "Fake Live Feed" so the user sees movement immediately
     const interval = setInterval(() => {
         const lastCandle = data[data.length - 1];
         const now = Math.floor(Date.now() / 1000);
         
-        // If we are in a new minute, start a new candle
         if (now > lastCandle.time + 60) {
              const newCandle = {
                  time: now,
@@ -71,8 +73,7 @@ const TVChart = ({ isTerminalMode }) => {
              data.push(newCandle);
              candleSeries.update(newCandle);
         } else {
-             // Update current candle (Live Ticking)
-             const volatility = (Math.random() - 0.5) * 2; // Random movement
+             const volatility = (Math.random() - 0.5) * 2; 
              let newClose = lastCandle.close + volatility;
              let newHigh = Math.max(lastCandle.high, newClose);
              let newLow = Math.min(lastCandle.low, newClose);
@@ -87,11 +88,12 @@ const TVChart = ({ isTerminalMode }) => {
              data[data.length - 1] = updatedCandle;
              candleSeries.update(updatedCandle);
         }
-    }, 500); // Tick every 500ms
+    }, 500); 
 
-    // Resize Handler
     const handleResize = () => {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+        if(chartContainerRef.current) {
+            chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+        }
     };
     window.addEventListener('resize', handleResize);
 
