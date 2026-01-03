@@ -425,7 +425,7 @@ export default function App() {
                       </DraggableWindow>)}
 
                     {showSnapQuote && liveSelectedData && (<DraggableWindow zIndex={zIndices.quote} onFocus={() => bringToFront('quote')} onClose={() => setShowSnapQuote(false)} initialX={400} initialY={100}>
-                        <SnapQuote symbolData={liveSelectedData} onClose={() => setShowSnapQuote(false)} onInitiateTrade={(mode) => { setOrderWindow({ mode, data: liveSelectedData }); bringToFront('order'); }} />
+                        <SnapQuote symbolData={liveSelectedData} onClose={() => setShowSnapQuote(false)} onInitiateTrade={(mode) => { setOrderWindow({ mode, data: liveSelectedData }); bringToFront('order'); }} isTerminalMode={isTerminalMode} />
                       </DraggableWindow>)}
 
                     {showFunds && (<DraggableWindow zIndex={zIndices.funds} onFocus={() => bringToFront('funds')} onClose={() => setShowFunds(false)} initialX={500} initialY={200}>
