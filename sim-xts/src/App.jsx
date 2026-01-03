@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor, Table } from 'lucide-react'; 
+import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor, Table, BarChart2, Search } from 'lucide-react'; // Added BarChart2, Search
 import MarketWatch from './MarketWatch';
 import OrderWindow from './OrderWindow';
 import OrderBook from './OrderBook';
@@ -11,16 +11,12 @@ import ModifyWindow from './ModifyWindow';
 import AdminPanel from './AdminPanel'; 
 import AuthScreen from './AuthScreen';
 import OptionChain from './OptionChain'; 
-import TVChart from './TVChart'; // <--- 1. NEW IMPORT
+import TVChart from './TVChart';
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
-// --- MAIN APP ---
-
 export default function App() {
   const [step, setStep] = useState(1);
-  
-  // [DEV MODE] Set to 'true' to BYPASS Login screen for UI work
   const [isLoggedIn, setIsLoggedIn] = useState(true); 
   const [isTerminalMode, setIsTerminalMode] = useState(false); 
   
@@ -32,6 +28,9 @@ export default function App() {
 
   // WINDOW STATES
   const [selectedScript, setSelectedScript] = useState(null); 
+  const [activeChartSymbol, setActiveChartSymbol] = useState("NIFTY 50"); // <--- Track Chart Symbol
+  const [chartSearchInput, setChartSearchInput] = useState("");
+
   const [orderWindow, setOrderWindow] = useState(null); 
   const [showOrderBook, setShowOrderBook] = useState(false); 
   const [showPositions, setShowPositions] = useState(false); 
@@ -42,11 +41,10 @@ export default function App() {
   
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   
-  // DEFAULT STATES (Starting Capital: 50L)
+  // DEFAULT STATES
   const [funds, setFunds] = useState({ opening: 5000000, payin: 0, payout: 0, usedMargin: 0, realizedMtm: 0, unrealizedMtm: 0, available: 5000000 });
   const [orders, setOrders] = useState([]);
   const [logs, setLogs] = useState([]);
-
   const [marketDataRef, setMarketDataRef] = useState([]); 
   const [zIndices, setZIndices] = useState({ order: 10, book: 10, pos: 10, quote: 10, funds: 10, modify: 10, chain: 10 }); 
   
@@ -56,6 +54,12 @@ export default function App() {
   };
 
   const liveSelectedData = selectedScript ? (marketDataRef.find(m => m.id === selectedScript.id) || selectedScript) : null;
+
+  // --- HANDLER FOR DASHBOARD CLICK ---
+  const handleScriptSelect = (row) => {
+      setSelectedScript(row);
+      setActiveChartSymbol(row.symbol); // Sync chart when clicking in dashboard
+  };
 
   // --- API LOAD DATA ---
   useEffect(() => {
@@ -308,6 +312,7 @@ export default function App() {
                     <nav className="space-y-2">
                         {[
                             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                            { id: 'charts', label: 'Charts', icon: BarChart2 }, // <--- NEW TAB
                             { id: 'chain', label: 'Option Chain', icon: Table }, 
                             { id: 'positions', label: 'Positions', icon: PieChart },
                             { id: 'orders', label: 'Orders', icon: LineChart },
@@ -352,26 +357,16 @@ export default function App() {
                     </div>
 
                     <div className="flex items-center gap-6">
-
-                        {/* TERMINAL MODE TOGGLE - SWITCH */}
+                        {/* TERMINAL MODE TOGGLE */}
                         <div className="flex items-center gap-2">
                             <span className={`text-xs font-bold ${isTerminalMode ? 'text-gray-400' : 'text-gray-700'}`}>MODERN</span>
-                            <div 
-                                onClick={() => setIsTerminalMode(!isTerminalMode)}
-                                className={`w-12 h-6 rounded-full p-1 relative cursor-pointer transition-colors duration-300 ${
-                                    isTerminalMode ? 'bg-blue-600' : 'bg-gray-300'
-                                }`}
-                            >
-                                <div 
-                                    className={`w-4 h-4 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${
-                                        isTerminalMode ? 'left-7' : 'left-1'
-                                    }`}
-                                ></div>
+                            <div onClick={() => setIsTerminalMode(!isTerminalMode)} className={`w-12 h-6 rounded-full p-1 relative cursor-pointer transition-colors duration-300 ${isTerminalMode ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                                <div className={`w-4 h-4 bg-white rounded-full absolute top-1 shadow-sm transition-all duration-300 ${isTerminalMode ? 'left-7' : 'left-1'}`}></div>
                             </div>
                             <span className={`text-xs font-bold ${isTerminalMode ? 'text-green-400' : 'text-gray-400'}`}>TERMINAL</span>
                         </div>
 
-                        {/* Status Indicator */}
+                        {/* Status */}
                         <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${isOffline ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
                             {isOffline ? <WifiOff size={14} /> : <Wifi size={14} />}
                             {isOffline ? 'OFFLINE' : 'LIVE FEED'}
@@ -389,29 +384,53 @@ export default function App() {
                     </div>
                 </div>
 
-                {/* DASHBOARD CONTENT */}
+                {/* CONTENT LAYOUTS */}
                 <div className={`flex-1 overflow-hidden relative p-4 ${isTerminalMode ? 'bg-[#121212]' : ''}`}>
                     
-                    {/* --- 2. UPDATED DASHBOARD LAYOUT (Split View) --- */}
+                    {/* LAYOUT 1: DASHBOARD (Market Watch ONLY) */}
                     {activeTab === 'dashboard' && (
-                        <div className="h-full w-full flex gap-4">
-                             {/* LEFT: MARKET WATCH (30%) */}
-                             <div className={`w-[30%] rounded-2xl shadow-sm overflow-hidden relative ${isTerminalMode ? 'border-none' : 'border border-gray-100 bg-white'}`}>
+                        <div className="h-full w-full flex flex-col gap-4">
+                             <div className={`flex-1 rounded-2xl shadow-sm overflow-hidden relative ${isTerminalMode ? 'border-none' : 'border border-gray-100 bg-white'}`}>
                                  <MarketWatch 
-                                    onSelectRow={(row) => setSelectedScript(row)} 
+                                    onSelectRow={handleScriptSelect} // Updated handler
                                     onDataUpdate={(data) => setMarketDataRef(data)} 
                                     isTerminalMode={isTerminalMode} 
                                  />
                              </div>
-
-                             {/* RIGHT: CHART (70%) */}
-                             <div className="flex-1 rounded-2xl overflow-hidden shadow-sm">
-                                 <TVChart isTerminalMode={isTerminalMode} />
-                             </div>
                         </div>
                     )}
 
-                    {/* FLOATING WINDOWS */}
+                    {/* LAYOUT 2: CHARTS TAB (Full Screen Chart with Search) */}
+                    {activeTab === 'charts' && (
+                        <div className="h-full w-full flex flex-col gap-2">
+                            {/* Chart Search Header */}
+                            <div className={`h-12 px-4 flex items-center gap-4 rounded-xl shadow-sm ${isTerminalMode ? 'bg-black border border-gray-700' : 'bg-white border border-gray-100'}`}>
+                                <Search size={18} className={isTerminalMode ? 'text-gray-400' : 'text-gray-500'} />
+                                <input 
+                                    type="text"
+                                    placeholder="Search Symbol (e.g. RELIANCE, BANKNIFTY)..."
+                                    className={`flex-1 bg-transparent focus:outline-none font-bold uppercase ${isTerminalMode ? 'text-white placeholder:text-gray-600' : 'text-gray-800 placeholder:text-gray-400'}`}
+                                    value={chartSearchInput}
+                                    onChange={(e) => setChartSearchInput(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && chartSearchInput.trim() !== "") {
+                                            setActiveChartSymbol(chartSearchInput.toUpperCase());
+                                            setChartSearchInput(""); // Clear after search
+                                        }
+                                    }}
+                                />
+                                <span className="text-xs text-gray-500 font-mono hidden md:block">Press ENTER to load</span>
+                            </div>
+
+                            {/* Main Chart */}
+                            <div className="flex-1 rounded-2xl overflow-hidden shadow-sm">
+                                <TVChart isTerminalMode={isTerminalMode} symbol={activeChartSymbol} />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* --- GLOBAL FLOATING WINDOWS (Always available via Hotkeys) --- */}
+                    
                     {orderWindow && (<DraggableWindow zIndex={zIndices.order} onFocus={() => bringToFront('order')} onClose={() => setOrderWindow(null)} initialX={300} initialY={150}>
                         <OrderWindow mode={orderWindow.mode} symbolData={orderWindow.data} availableFunds={funds.available} onClose={() => setOrderWindow(null)} onSubmit={handleOrderSubmit} />
                       </DraggableWindow>)}
@@ -441,24 +460,17 @@ export default function App() {
                         <Funds fundsData={funds} onClose={() => setShowFunds(false)} isTerminalMode={isTerminalMode} />
                       </DraggableWindow>)}
 
-                    {/* <--- 4. OPTION CHAIN WINDOW ---> */}
                     {showOptionChain && (<DraggableWindow zIndex={zIndices.chain} onFocus={() => bringToFront('chain')} onClose={() => setShowOptionChain(false)} initialX={100} initialY={100}>
                         <div style={{width: '900px', height: '600px'}}>
-                           <OptionChain 
-                                spotPrice={24550} 
-                                isTerminalMode={isTerminalMode} 
-                                onClose={() => setShowOptionChain(false)} 
-                           />
+                           <OptionChain spotPrice={24550} isTerminalMode={isTerminalMode} onClose={() => setShowOptionChain(false)} />
                         </div>
                       </DraggableWindow>)}
-
                 </div>
 
                 <div className="bg-white border-t border-gray-200 px-4 py-1 text-[10px] text-gray-500 flex justify-between">
                      <span>System Logs: {logs.length > 0 ? logs[0].msg : "Ready"}</span>
                      <span>v2.0.1 (PaperProp)</span>
                 </div>
-
             </div>
         </div>
     );
