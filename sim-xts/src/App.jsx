@@ -429,7 +429,7 @@ export default function App() {
                       </DraggableWindow>)}
 
                     {showFunds && (<DraggableWindow zIndex={zIndices.funds} onFocus={() => bringToFront('funds')} onClose={() => setShowFunds(false)} initialX={500} initialY={200}>
-                        <Funds fundsData={funds} onClose={() => setShowFunds(false)} />
+                        <Funds fundsData={funds} onClose={() => setShowFunds(false)} isTerminalMode={isTerminalMode} />
                       </DraggableWindow>)}
 
                     {/* <--- 4. OPTION CHAIN WINDOW ---> */}
