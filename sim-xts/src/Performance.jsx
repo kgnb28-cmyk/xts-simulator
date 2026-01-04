@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { createChart, ColorType } from 'lightweight-charts';
-import { Calendar, TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
+import { createChart, ColorType, AreaSeries } from 'lightweight-charts'; // <--- 1. ADDED AreaSeries IMPORT
+import { Calendar, TrendingUp } from 'lucide-react';
 
 const Performance = ({ isTerminalMode }) => {
   const chartContainerRef = useRef();
@@ -43,7 +43,8 @@ const Performance = ({ isTerminalMode }) => {
       rightPriceScale: { borderVisible: false },
     });
 
-    const areaSeries = chart.addAreaSeries({
+    // <--- 2. FIXED API CALL FOR V5 --->
+    const areaSeries = chart.addSeries(AreaSeries, { 
       topColor: isTerminalMode ? 'rgba(38, 166, 154, 0.56)' : 'rgba(76, 175, 80, 0.5)',
       bottomColor: isTerminalMode ? 'rgba(38, 166, 154, 0.04)' : 'rgba(76, 175, 80, 0.04)',
       lineColor: isTerminalMode ? 'rgba(38, 166, 154, 1)' : 'rgba(76, 175, 80, 1)',
