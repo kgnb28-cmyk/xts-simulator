@@ -1,94 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUp, ArrowDown, Search, Plus, X, Activity, TrendingUp } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { ArrowUp, ArrowDown, Search, X, Activity, TrendingUp } from 'lucide-react';
 
-// --- MOCK MASTER DATABASE ---
-const MASTER_SCRIPS = [
-  { symbol: 'NIFTY 26JAN FUT', exchange: 'NSEFO', lotSize: 50, ltp: 24550.00, type: 'FUT' },
-  { symbol: 'BANKNIFTY 26JAN FUT', exchange: 'NSEFO', lotSize: 15, ltp: 48200.00, type: 'FUT' },
-  { symbol: 'RELIANCE EQ', exchange: 'NSE', lotSize: 1, ltp: 2850.50, type: 'EQ' },
-  { symbol: 'HDFCBANK EQ', exchange: 'NSE', lotSize: 1, ltp: 1650.00, type: 'EQ' },
-  { symbol: 'NIFTY 24500 CE', exchange: 'NSEFO', lotSize: 50, ltp: 145.20, type: 'OPT' },
-  { symbol: 'NIFTY 24500 PE', exchange: 'NSEFO', lotSize: 50, ltp: 110.50, type: 'OPT' },
-  { symbol: 'BANKNIFTY 48000 CE', exchange: 'NSEFO', lotSize: 15, ltp: 320.00, type: 'OPT' },
-  { symbol: 'RELIANCE 2800 CE', exchange: 'NSEFO', lotSize: 250, ltp: 55.00, type: 'OPT' },
-  { symbol: 'FINNIFTY 21000 PE', exchange: 'NSEFO', lotSize: 65, ltp: 45.00, type: 'OPT' },
-];
+// --- MOCK DATABASE REMOVED (Data now comes from Server) ---
 
-const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
+const MarketWatch = ({ onSelectRow, data = [], isTerminalMode }) => { // <--- 1. ACCEPTS DATA PROP
   
-  const [watchlist, setWatchlist] = useState([
-    { id: 1, symbol: 'NIFTY 24500 CE', ltp: 145.20, change: 12.5, bidQty: 500, bid: 145.10, ask: 145.25, askQty: 1200, vol: '1.2M', oi: '45L', tickDir: 'up' },
-    { id: 2, symbol: 'BANKNIFTY FUT', ltp: 48200.00, change: -150.00, bidQty: 25, bid: 48198.00, ask: 48202.00, askQty: 50, vol: '500K', oi: '12L', tickDir: 'down' },
-  ]);
-
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchInputRef = useRef(null);
 
-  // SMART SEARCH LOGIC
-  useEffect(() => {
-    if (searchTerm.length < 2) { setSearchResults([]); return; }
-    const filtered = MASTER_SCRIPS.filter(scrip => scrip.symbol.toLowerCase().includes(searchTerm.toLowerCase())).slice(0, 5); 
-    setSearchResults(filtered);
-    setSelectedIndex(0);
-  }, [searchTerm]);
-
-  const addToWatchlist = (scrip) => {
-    if (watchlist.some(item => item.symbol === scrip.symbol)) { setSearchTerm(''); setIsSearchOpen(false); return; }
-    const newRow = {
-        id: Date.now(), symbol: scrip.symbol, ltp: scrip.ltp, change: 0.00, 
-        bidQty: scrip.lotSize * 5, bid: scrip.ltp - 0.05, ask: scrip.ltp + 0.05, askQty: scrip.lotSize * 2, 
-        vol: '0', oi: '-', tickDir: 'up'
-    };
-    setWatchlist(prev => [newRow, ...prev]);
-    setSearchTerm('');
-    setIsSearchOpen(false);
-  };
-
-  // KEYBOARD NAVIGATION
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % searchResults.length);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + searchResults.length) % searchResults.length);
-    } else if (e.key === 'Enter' && searchResults.length > 0) {
-      addToWatchlist(searchResults[selectedIndex]);
-    } else if (e.key === 'Escape') {
-      setSearchTerm('');
-      setIsSearchOpen(false);
-    }
-  };
-
-  // --- SIMULATION ENGINE ---
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWatchlist(prev => prev.map(item => {
-        const move = (Math.random() - 0.5) * 1.5;
-        const direction = move >= 0 ? 'up' : 'down'; 
-        const newLtp = parseFloat((item.ltp + move).toFixed(2));
-        
-        return { 
-            ...item, 
-            ltp: newLtp, 
-            tickDir: direction, 
-            bid: parseFloat((newLtp - 0.05).toFixed(2)),
-            ask: parseFloat((newLtp + 0.05).toFixed(2)),
-            change: parseFloat((move * 10).toFixed(2)) 
-        };
-      }));
-    }, 800);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if(onDataUpdate) onDataUpdate(watchlist);
-  }, [watchlist, onDataUpdate]);
-
-  // --- STYLES ---
+  // --- STYLES (Preserved from your code) ---
   const styles = isTerminalMode ? {
       // TERMINAL MODE
       container: "bg-black text-white font-mono text-[11px] h-full border-r border-gray-800",
@@ -96,24 +16,20 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
       row: "bg-black border-b border-gray-800 hover:bg-[#222] text-white cursor-pointer",
       symbol: "text-yellow-400 font-bold",
       
-      // --- UPDATED: Dynamic Backgrounds for Ticks ---
-      bgTickUp: "bg-[#3b82f6] text-white font-bold", // Blue BG
-      bgTickDown: "bg-[#ef4444] text-white font-bold", // Red BG
-      bgStandard: "", // Standard Black BG
+      // Dynamic Backgrounds
+      bgTickUp: "bg-[#3b82f6] text-white font-bold",
+      bgTickDown: "bg-[#ef4444] text-white font-bold",
+      bgStandard: "",
 
-      // --- UPDATED: Dynamic Text for LTP ---
+      // Dynamic Text
       textTickUp: "text-[#3b82f6] font-bold",
       textTickDown: "text-[#ef4444] font-bold",
-
-      // --- UPDATED: Static Text for % Change ---
       textGreen: "text-green-500 font-bold",
       textRed: "text-red-500 font-bold",
 
       searchContainer: "bg-[#1a1a1a] border-b border-gray-700 p-1",
       searchInput: "bg-black border border-gray-600 text-yellow-400 placeholder:text-gray-600 h-8 text-xs focus:outline-none focus:border-yellow-500",
-      dropdown: "bg-[#222] border-gray-600 text-white",
-      dropdownHover: "bg-blue-900",
-
+      
       cell: "border-r border-gray-800 px-2 py-1 truncate h-8 flex items-center justify-end",
       cellLeft: "border-r border-gray-800 px-2 py-1 truncate h-8 flex items-center justify-start",
       
@@ -135,9 +51,7 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
       
       searchContainer: "bg-white border-b border-gray-200 p-2",
       searchInput: "bg-gray-50 border-gray-200 text-gray-800 focus:border-indigo-500 focus:bg-white placeholder:text-gray-400 h-9 rounded-lg",
-      dropdown: "bg-white border-gray-200 text-gray-800",
-      dropdownHover: "bg-indigo-50 text-indigo-700",
-
+      
       cell: "px-2 py-3 flex items-center justify-end",
       cellLeft: "px-2 py-3 flex items-center justify-start",
       
@@ -150,46 +64,22 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
   return (
     <div className={`flex flex-col h-full relative transition-colors duration-200 ${styles.container}`}>
       
-      {/* SEARCH BAR */}
+      {/* SEARCH BAR (Visual Only - Backend now controls list) */}
       <div className={`sticky top-0 z-30 ${styles.searchContainer}`}>
         <div className="relative">
             <Search className={`absolute left-2 top-2.5 ${styles.dimText}`} size={14} />
             <input 
                 ref={searchInputRef}
                 type="text" 
-                placeholder={isTerminalMode ? "SEARCH SCRIPT..." : "Search & Add (e.g. Nifty)"}
+                placeholder={isTerminalMode ? "SEARCH SCRIPT..." : "Search (Managed by Server)"}
                 className={`w-full pl-8 pr-8 rounded transition-all ${styles.searchInput}`}
                 value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setIsSearchOpen(true); }}
-                onKeyDown={handleKeyDown}
-                onFocus={() => setIsSearchOpen(true)}
+                onChange={(e) => setSearchTerm(e.target.value)}
             />
             {searchTerm && (
                 <button onClick={() => setSearchTerm('')} className={`absolute right-2 top-2.5 hover:opacity-75 ${styles.dimText}`}>
                     <X size={14} />
                 </button>
-            )}
-
-            {/* DROPDOWN RESULTS */}
-            {isSearchOpen && searchResults.length > 0 && (
-                <div className={`absolute top-full left-0 right-0 mt-1 border rounded shadow-xl overflow-hidden z-50 ${styles.dropdown}`}>
-                    {searchResults.map((result, idx) => (
-                        <div 
-                            key={idx}
-                            onClick={() => addToWatchlist(result)}
-                            className={`flex justify-between items-center px-4 py-2 cursor-pointer transition-colors ${idx === selectedIndex ? styles.dropdownHover : ''}`}
-                        >
-                            <div className="flex flex-col">
-                                <span className="font-bold text-xs">{result.symbol}</span>
-                                <span className={`text-[9px] ${styles.dimText}`}>{result.exchange} • Lot: {result.lotSize}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <span className="font-mono text-xs">{result.ltp.toFixed(2)}</span>
-                                <Plus size={14} className={styles.dimText} />
-                            </div>
-                        </div>
-                    ))}
-                </div>
             )}
         </div>
       </div>
@@ -208,12 +98,14 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
         <div className={`col-span-1 ${styles.cell} justify-center`}>Action</div>
       </div>
 
-      {/* ROWS */}
+      {/* ROWS (Rendered from Backend Data) */}
       <div className="flex-1 overflow-y-auto">
-        {watchlist.map((row) => {
-          // --- UPDATED LOGIC: Determine dynamic background class based on tick direction ---
+        {data.map((row) => {
+          // Determine dynamic background class based on tick direction
+          // (Data from server includes 'change' but we calculate tickDir visually if needed)
+          const tickUp = row.change >= 0;
           const dynamicBgClass = isTerminalMode 
-            ? (row.tickDir === 'up' ? styles.bgTickUp : styles.bgTickDown) 
+            ? (tickUp ? styles.bgTickUp : styles.bgTickDown) 
             : '';
 
           return (
@@ -230,36 +122,36 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
                 </div>
             </div>
 
-            {/* LTP - Black BG, Dynamic Text Color */}
-            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? (row.tickDir === 'up' ? styles.textTickUp : styles.textTickDown) : (row.change >= 0 ? styles.ltpUp : styles.ltpDown)}`}>
+            {/* LTP */}
+            <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? (tickUp ? styles.textTickUp : styles.textTickDown) : (tickUp ? styles.ltpUp : styles.ltpDown)}`}>
               {row.ltp.toFixed(2)}
             </div>
 
-            {/* BID QTY - Dynamic BG */}
+            {/* BID QTY */}
             <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.bid}`}>
-                <span className={isTerminalMode ? "text-white" : styles.dimText}>{row.bidQty}</span>
+                <span className={isTerminalMode ? "text-white" : styles.dimText}>{row.bQty || '-'}</span>
             </div>
             
-            {/* BID PRICE - Dynamic BG */}
+            {/* BID PRICE */}
             <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.bid}`}>
-                {row.bid.toFixed(2)}
+                {row.bPrice || '-'}
             </div>
 
-            {/* ASK PRICE - Dynamic BG */}
+            {/* ASK PRICE */}
             <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.ask}`}>
-                {row.ask.toFixed(2)}
+                {row.sPrice || '-'}
             </div>
 
-            {/* ASK QTY - Dynamic BG */}
+            {/* ASK QTY */}
             <div className={`col-span-1 ${styles.cell} ${isTerminalMode ? dynamicBgClass : styles.ask}`}>
-                <span className={isTerminalMode ? "text-white" : styles.dimText}>{row.askQty}</span>
+                <span className={isTerminalMode ? "text-white" : styles.dimText}>{row.sQty || '-'}</span>
             </div>
 
-            {/* VOL & OI */}
-            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>{row.vol}</div>
-            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>{row.oi}</div>
+            {/* VOL & OI (Server Mock Data) */}
+            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>1.2M</div>
+            <div className={`col-span-1 hidden lg:flex ${styles.cell} font-mono ${styles.dimText}`}>45L</div>
 
-            {/* CHANGE % - Static Colors based on value, no flickering */}
+            {/* CHANGE % */}
             <div className={`col-span-1 ${styles.cell}`}>
                 {row.change >= 0 ? 
                     <ArrowUp size={10} className={isTerminalMode ? styles.textGreen : "text-green-600"} /> : 
@@ -279,6 +171,12 @@ const MarketWatch = ({ onSelectRow, onDataUpdate, isTerminalMode }) => {
           </div>
         );
         })}
+        
+        {data.length === 0 && (
+            <div className="p-4 text-center text-xs opacity-40">
+                Waiting for Data Feed...
+            </div>
+        )}
       </div>
       
       {/* BOTTOM BAR */}
