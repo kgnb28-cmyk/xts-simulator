@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor, Table, BarChart2, Search } from 'lucide-react'; // Added BarChart2, Search
+import { Wifi, WifiOff, LayoutDashboard, LineChart, PieChart, Settings, LogOut, Bell, User, Monitor, Table, BarChart2, Search } from 'lucide-react'; 
 import MarketWatch from './MarketWatch';
 import OrderWindow from './OrderWindow';
 import OrderBook from './OrderBook';
@@ -12,6 +12,8 @@ import AdminPanel from './AdminPanel';
 import AuthScreen from './AuthScreen';
 import OptionChain from './OptionChain'; 
 import TVChart from './TVChart';
+import Performance from './Performance'; // <--- NEW IMPORT
+import SettingsTab from './Settings';    // <--- NEW IMPORT (Renamed to avoid conflict with Icon)
 
 const API_URL = "https://xts-backend-api.onrender.com/api";
 
@@ -28,7 +30,7 @@ export default function App() {
 
   // WINDOW STATES
   const [selectedScript, setSelectedScript] = useState(null); 
-  const [activeChartSymbol, setActiveChartSymbol] = useState("NIFTY 50"); // <--- Track Chart Symbol
+  const [activeChartSymbol, setActiveChartSymbol] = useState("NIFTY 50"); 
   const [chartSearchInput, setChartSearchInput] = useState("");
 
   const [orderWindow, setOrderWindow] = useState(null); 
@@ -58,7 +60,7 @@ export default function App() {
   // --- HANDLER FOR DASHBOARD CLICK ---
   const handleScriptSelect = (row) => {
       setSelectedScript(row);
-      setActiveChartSymbol(row.symbol); // Sync chart when clicking in dashboard
+      setActiveChartSymbol(row.symbol); 
   };
 
   // --- API LOAD DATA ---
@@ -312,10 +314,11 @@ export default function App() {
                     <nav className="space-y-2">
                         {[
                             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                            { id: 'charts', label: 'Charts', icon: BarChart2 }, // <--- NEW TAB
+                            { id: 'charts', label: 'Charts', icon: BarChart2 }, 
                             { id: 'chain', label: 'Option Chain', icon: Table }, 
                             { id: 'positions', label: 'Positions', icon: PieChart },
-                            { id: 'orders', label: 'Orders', icon: LineChart },
+                            { id: 'performance', label: 'Performance', icon: LineChart }, // <--- NEW TAB
+                            { id: 'orders', label: 'Orders', icon: Table }, // Icon changed to avoid conflict with Chain
                             { id: 'settings', label: 'Settings', icon: Settings },
                         ].map(item => (
                             <button 
@@ -392,7 +395,7 @@ export default function App() {
                         <div className="h-full w-full flex flex-col gap-4">
                              <div className={`flex-1 rounded-2xl shadow-sm overflow-hidden relative ${isTerminalMode ? 'border-none' : 'border border-gray-100 bg-white'}`}>
                                  <MarketWatch 
-                                    onSelectRow={handleScriptSelect} // Updated handler
+                                    onSelectRow={handleScriptSelect} 
                                     onDataUpdate={(data) => setMarketDataRef(data)} 
                                     isTerminalMode={isTerminalMode} 
                                  />
@@ -400,10 +403,9 @@ export default function App() {
                         </div>
                     )}
 
-                    {/* LAYOUT 2: CHARTS TAB (Full Screen Chart with Search) */}
+                    {/* LAYOUT 2: CHARTS TAB */}
                     {activeTab === 'charts' && (
                         <div className="h-full w-full flex flex-col gap-2">
-                            {/* Chart Search Header */}
                             <div className={`h-12 px-4 flex items-center gap-4 rounded-xl shadow-sm ${isTerminalMode ? 'bg-black border border-gray-700' : 'bg-white border border-gray-100'}`}>
                                 <Search size={18} className={isTerminalMode ? 'text-gray-400' : 'text-gray-500'} />
                                 <input 
@@ -415,22 +417,30 @@ export default function App() {
                                     onKeyDown={(e) => {
                                         if (e.key === 'Enter' && chartSearchInput.trim() !== "") {
                                             setActiveChartSymbol(chartSearchInput.toUpperCase());
-                                            setChartSearchInput(""); // Clear after search
+                                            setChartSearchInput(""); 
                                         }
                                     }}
                                 />
                                 <span className="text-xs text-gray-500 font-mono hidden md:block">Press ENTER to load</span>
                             </div>
 
-                            {/* Main Chart */}
                             <div className="flex-1 rounded-2xl overflow-hidden shadow-sm">
                                 <TVChart isTerminalMode={isTerminalMode} symbol={activeChartSymbol} />
                             </div>
                         </div>
                     )}
 
-                    {/* --- GLOBAL FLOATING WINDOWS (Always available via Hotkeys) --- */}
-                    
+                    {/* LAYOUT 3: PERFORMANCE TAB */}
+                    {activeTab === 'performance' && (
+                        <Performance isTerminalMode={isTerminalMode} />
+                    )}
+
+                    {/* LAYOUT 4: SETTINGS TAB */}
+                    {activeTab === 'settings' && (
+                        <SettingsTab currentUserId={currentUserId} isTerminalMode={isTerminalMode} />
+                    )}
+
+                    {/* --- GLOBAL FLOATING WINDOWS --- */}
                     {orderWindow && (<DraggableWindow zIndex={zIndices.order} onFocus={() => bringToFront('order')} onClose={() => setOrderWindow(null)} initialX={300} initialY={150}>
                         <OrderWindow mode={orderWindow.mode} symbolData={orderWindow.data} availableFunds={funds.available} onClose={() => setOrderWindow(null)} onSubmit={handleOrderSubmit} />
                       </DraggableWindow>)}
@@ -444,12 +454,7 @@ export default function App() {
                       </DraggableWindow>)}
                     
                     {(showPositions || activeTab === 'positions') && (<DraggableWindow zIndex={zIndices.pos} onFocus={() => bringToFront('pos')} onClose={() => {setShowPositions(false); if(activeTab === 'positions') setActiveTab('dashboard');}} initialX={150} initialY={150}>
-                        <NetPositions 
-                            orders={orders} 
-                            marketData={marketDataRef || []} 
-                            onClose={() => setShowPositions(false)} 
-                            onBulkSquareOff={handleBulkSquareOff} isTerminalMode={isTerminalMode}
-                        />
+                        <NetPositions orders={orders} marketData={marketDataRef || []} onClose={() => setShowPositions(false)} onBulkSquareOff={handleBulkSquareOff} isTerminalMode={isTerminalMode} />
                       </DraggableWindow>)}
 
                     {showSnapQuote && liveSelectedData && (<DraggableWindow zIndex={zIndices.quote} onFocus={() => bringToFront('quote')} onClose={() => setShowSnapQuote(false)} initialX={400} initialY={100}>
@@ -469,7 +474,7 @@ export default function App() {
 
                 <div className="bg-white border-t border-gray-200 px-4 py-1 text-[10px] text-gray-500 flex justify-between">
                      <span>System Logs: {logs.length > 0 ? logs[0].msg : "Ready"}</span>
-                     <span>v2.0.1 (PaperProp)</span>
+                     <span>v2.0.2 (PaperProp)</span>
                 </div>
             </div>
         </div>
